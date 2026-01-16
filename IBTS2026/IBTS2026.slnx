@@ -1,0 +1,11 @@
+<Solution>
+  <Project Path="IBTS2026.ApiService/IBTS2026.ApiService.csproj" />
+  <Project Path="IBTS2026.AppHost/IBTS2026.AppHost.csproj" />
+  <Project Path="IBTS2026.Application/IBTS2026.Application.csproj" />
+  <Project Path="IBTS2026.Domain/IBTS2026.Domain.csproj" />
+  <Project Path="IBTS2026.Infrastructure/IBTS2026.Infrastructure.csproj" />
+  <Project Path="IBTS2026.ServiceDefaults/IBTS2026.ServiceDefaults.csproj" />
+  <Project Path="IBTS2026.Tests/IBTS2026.Tests.csproj" />
+  <Project Path="IBTS2026.Web/IBTS2026.Web.csproj" />
+  <Project Path="IBTS2026.Worker/IBTS2026.Worker.csproj" />
+</Solution>
