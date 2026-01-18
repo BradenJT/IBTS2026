@@ -1,5 +1,5 @@
 <Solution>
-  <Project Path="IBTS2026.ApiService/IBTS2026.ApiService.csproj" />
+  <Project Path="IBTS2026.ApiService/IBTS2026.Api.csproj" />
   <Project Path="IBTS2026.AppHost/IBTS2026.AppHost.csproj" />
   <Project Path="IBTS2026.Application/IBTS2026.Application.csproj" />
   <Project Path="IBTS2026.Domain/IBTS2026.Domain.csproj" />

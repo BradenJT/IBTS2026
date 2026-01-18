@@ -6,4 +6,19 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.20" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\IBTS2026.Application\IBTS2026.Application.csproj" />
+    <ProjectReference Include="..\IBTS2026.Domain\IBTS2026.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Messaging\" />
+    <Folder Include="Observability\" />
+    <Folder Include="Persistence\Configurations\" />
+  </ItemGroup>
+
 </Project>

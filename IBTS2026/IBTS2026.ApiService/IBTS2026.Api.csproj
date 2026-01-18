@@ -7,11 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\IBTS2026.Application\IBTS2026.Application.csproj" />
+    <ProjectReference Include="..\IBTS2026.Infrastructure\IBTS2026.Infrastructure.csproj" />
     <ProjectReference Include="..\IBTS2026.ServiceDefaults\IBTS2026.ServiceDefaults.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0-rc.1.25451.107" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Endpoints\" />
+    <Folder Include="Contracts\" />
+    <Folder Include="Filters\" />
   </ItemGroup>
 
 </Project>
