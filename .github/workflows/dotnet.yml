@@ -16,6 +16,12 @@ on:
       - 'LICENSE'
       - '.gitignore'
   workflow_dispatch:
+    inputs:
+      solution_path:
+        description: 'Path to solution or project file'
+        required: false
+        default: '**/*.sln'
+        type: string
 
 permissions:
   contents: read
@@ -42,13 +48,13 @@ jobs:
           ${{ runner.os }}-nuget-
         
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore ${{ github.event.inputs.solution_path || '**/*.sln' }}
       
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build ${{ github.event.inputs.solution_path || '**/*.sln' }} --configuration Release --no-restore
       
     - name: Test
-      run: dotnet test --configuration Release --no-build --verbosity normal --logger trx --results-directory TestResults
+      run: dotnet test ${{ github.event.inputs.solution_path || '**/*.sln' }} --configuration Release --no-build --verbosity normal --logger trx --results-directory TestResults
       
     - name: Upload test results
       if: always()
