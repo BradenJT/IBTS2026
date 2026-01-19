@@ -31,24 +31,17 @@ public partial class User
         };
     }
 
-    public void ChangeFirstName(string firstName)
+    public static User Update(
+        User user,
+        string email,
+        string firstName,
+        string lastName,
+        string role)
     {
-        if (string.IsNullOrWhiteSpace(firstName))
-            throw new ArgumentException("First name cannot be null or empty.", nameof(firstName));
-        FirstName = firstName;
-    }
-
-    public void ChangeLastName(string lastName)
-    {
-        if (string.IsNullOrWhiteSpace(lastName))
-            throw new ArgumentException("Last name cannot be null or empty.", nameof(lastName));
-        LastName = lastName;
-    }
-
-    public void ChangeRole(string role)
-    {
-        if (string.IsNullOrWhiteSpace(role))
-            throw new ArgumentException("Role cannot be null or empty.", nameof(role));
-        Role = role;
+        user.Email = email;
+        user.FirstName = firstName;
+        user.LastName = lastName;
+        user.Role = role;
+        return user;
     }
 }

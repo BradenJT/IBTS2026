@@ -1,10 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using FluentValidation;
 
 namespace IBTS2026.Application.Features.Incidents.RemoveIncident
 {
-    internal class RemoveIncidentCommandValidator
+    internal sealed class RemoveIncidentCommandValidator
+        :AbstractValidator<RemoveIncidentCommand>
     {
+        public RemoveIncidentCommandValidator()
+        {
+            RuleFor(x => x.IncidentId)
+                .GreaterThan(0).WithMessage("UserId must be greater than zero");
+        }
     }
 }
