@@ -1,0 +1,65 @@
+name: .NET CI
+
+on:
+  push:
+    branches: [ "main" ]
+    paths-ignore:
+      - '.github/**'
+      - '**.md'
+      - 'LICENSE'
+      - '.gitignore'
+  pull_request:
+    branches: [ "main" ]
+    paths-ignore:
+      - '.github/**'
+      - '**.md'
+      - 'LICENSE'
+      - '.gitignore'
+  workflow_dispatch:
+    inputs:
+      solution_path:
+        description: 'Path to solution or project file'
+        required: false
+        default: '**/*.slnx'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+        
+    - name: Restore dependencies
+      run: dotnet restore ${{ github.event.inputs.solution_path || '**/*.slnx' }}
+      
+    - name: Build
+      run: dotnet build ${{ github.event.inputs.solution_path || '**/*.slnx' }} --configuration Release --no-restore
+      
+    - name: Test
+      run: dotnet test ${{ github.event.inputs.solution_path || '**/*.slnx' }} --configuration Release --no-build --verbosity normal --logger trx --results-directory TestResults
+      
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: TestResults
+        retention-days: 30
