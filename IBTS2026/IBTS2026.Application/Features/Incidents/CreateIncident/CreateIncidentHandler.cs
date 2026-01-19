@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using IBTS2026.Application.Abstractions.Persistence;
 using IBTS2026.Application.Abstractions.Requests;
+using IBTS2026.Domain.Entities;
 using IBTS2026.Domain.Interfaces.Incidents;
 
 namespace IBTS2026.Application.Features.Incidents.CreateIncident
@@ -10,11 +11,28 @@ namespace IBTS2026.Application.Features.Incidents.CreateIncident
         IUnitOfWork unitOfWork,
         IValidator<CreateIncidentCommand> validator) : IRequestHandler<CreateIncidentCommand, int>
     {
-        public async Task<int> Handle(CreateIncidentCommand request, CancellationToken ct)
-        {
-            await validator.ValidateAndThrowAsync(request, ct);
+        private readonly IIncidentRepository _incidents = incidents ?? throw new ArgumentNullException(nameof(incidents));
+        private readonly IUnitOfWork _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(_unitOfWork));
+        private readonly IValidator<CreateIncidentCommand> _validator = validator ?? throw new ArgumentNullException(nameof(validator));
 
-            var incident = 
+        public async Task<int> Handle(CreateIncidentCommand command, CancellationToken ct)
+        {
+            await _validator.ValidateAndThrowAsync(command, ct);
+
+            var incident = Incident.Create(
+                command.Title,
+                command.Description,
+                command.StatusId,
+                command.PriorityId,
+                command.CreatedByUserId,
+                command.AssignedToUserId,
+                DateTime.UtcNow);
+
+            _incidents.Add(incident);
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return incident.IncidentId;
         }
     }
 }
