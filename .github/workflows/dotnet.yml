@@ -20,7 +20,7 @@ on:
       solution_path:
         description: 'Path to solution or project file'
         required: false
-        default: '**/*.sln'
+        default: ''
         type: string
 
 permissions:
@@ -39,6 +39,20 @@ jobs:
       with:
         dotnet-version: '8.0.x'
         
+    - name: Find solution file
+      id: find-sln
+      run: |
+        if [ -n "${{ github.event.inputs.solution_path }}" ]; then
+          echo "solution=${{ github.event.inputs.solution_path }}" >> $GITHUB_OUTPUT
+        else
+          SLN_FILE=$(find . -name "*.sln" -type f | head -n 1)
+          if [ -z "$SLN_FILE" ]; then
+            echo "No solution file found"
+            exit 1
+          fi
+          echo "solution=$SLN_FILE" >> $GITHUB_OUTPUT
+        fi
+        
     - name: Cache NuGet packages
       uses: actions/cache@v4
       with:
@@ -48,13 +62,13 @@ jobs:
           ${{ runner.os }}-nuget-
         
     - name: Restore dependencies
-      run: dotnet restore ${{ github.event.inputs.solution_path || '**/*.sln' }}
+      run: dotnet restore "${{ steps.find-sln.outputs.solution }}"
       
     - name: Build
-      run: dotnet build ${{ github.event.inputs.solution_path || '**/*.sln' }} --configuration Release --no-restore
+      run: dotnet build "${{ steps.find-sln.outputs.solution }}" --configuration Release --no-restore
       
     - name: Test
-      run: dotnet test ${{ github.event.inputs.solution_path || '**/*.sln' }} --configuration Release --no-build --verbosity normal --logger trx --results-directory TestResults
+      run: dotnet test "${{ steps.find-sln.outputs.solution }}" --configuration Release --no-build --verbosity normal --logger trx --results-directory TestResults
       
     - name: Upload test results
       if: always()
