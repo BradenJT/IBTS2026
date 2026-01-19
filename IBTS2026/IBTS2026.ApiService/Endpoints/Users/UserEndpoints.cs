@@ -26,7 +26,7 @@ namespace IBTS2026.Api.Endpoints.Users
                 return result is null
                 ? Results.NotFound()
                 : Results.Ok(result);
-            };
+            });
 
             app.MapGet("/users", async (
                 int pageNumber,
