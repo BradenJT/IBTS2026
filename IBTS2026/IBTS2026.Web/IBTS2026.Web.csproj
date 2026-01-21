@@ -10,8 +10,4 @@
     <ProjectReference Include="..\IBTS2026.ServiceDefaults\IBTS2026.ServiceDefaults.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Services\" />
-  </ItemGroup>
-
 </Project>
