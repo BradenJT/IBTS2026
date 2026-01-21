@@ -52,6 +52,24 @@ jobs:
       
     - name: Build
       run: dotnet build ${{ github.event.inputs.solution_path || '**/*.slnx' }} --configuration Release --no-restore
+
+    - name: Trust Dev Cert (Linux)
+      run: |
+          dotnet dev-certs https --clean
+          dotnet dev-certs https --trust
+    - name: Set HTTP URL for local services
+      run: echo "ASPNETCORE_URLS=http://localhost:5000" >> $GITHUB_ENV
+
+    - name: Wait for API service to be ready
+      run: |
+        for i in {1..30}; do
+          if curl -s http://localhost:5000/health; then
+            echo "Service ready"
+            break
+          fi
+          echo "Waiting..."
+          sleep 2
+        done
       
     - name: Test
       run: dotnet test ${{ github.event.inputs.solution_path || '**/*.slnx' }} --configuration Release --no-build --verbosity normal --logger trx --results-directory TestResults
