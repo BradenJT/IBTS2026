@@ -6,15 +6,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBTS2026.Infrastructure.Queries.Users
 {
-    internal sealed class GetUserQueryHandler
-    : IQueryHandler<GetUserQuery, UserDetailsDto?>
+    internal sealed class GetUserQueryHandler(IBTS2026Context context)
+        : IQueryHandler<GetUserQuery, UserDetailsDto?>
     {
-        private readonly IBTS2026Context _context;
-
-        public GetUserQueryHandler(IBTS2026Context context)
-        {
-            _context = context;
-        }
+        private readonly IBTS2026Context _context = context;
 
         public async Task<UserDetailsDto?> Handle(
             GetUserQuery query,

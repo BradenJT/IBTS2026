@@ -5,14 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBTS2026.Infrastructure.Repositories.Users
 {
-    internal sealed class UserRepository 
-        : RepositoryBase<User>, IUserRepository
+    internal sealed class UserRepository(IBTS2026Context context)
+                : RepositoryBase<User>(context.Users), IUserRepository
     {
-        public UserRepository(IBTS2026Context context)
-            : base(context.Users)
-        {
-        }
-
         public Task<User?> GetByIdAsync(int id, CancellationToken ct)
             => Query().FirstOrDefaultAsync(u => u.UserId == id, ct);
 
