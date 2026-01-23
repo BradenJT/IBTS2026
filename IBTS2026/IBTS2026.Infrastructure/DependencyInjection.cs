@@ -8,24 +8,14 @@ using IBTS2026.Domain.Interfaces.Users;
 using IBTS2026.Infrastructure.Persistence;
 using IBTS2026.Infrastructure.Queries.Users;
 using IBTS2026.Infrastructure.Repositories.Users;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace IBTS2026.Infrastructure;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructure(
-        this IServiceCollection services,
-        IConfiguration configuration)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
-        // Register DbContext
-        services.AddDbContext<IBTS2026Context>(options =>
-            options.UseSqlServer(
-                configuration.GetConnectionString("IBTS2026"),
-                sqlOptions => sqlOptions.EnableRetryOnFailure()));
-
         // Register Unit of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 

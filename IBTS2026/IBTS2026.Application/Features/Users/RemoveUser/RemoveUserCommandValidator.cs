@@ -2,7 +2,7 @@
 
 namespace IBTS2026.Application.Features.Users.RemoveUser
 {
-    internal sealed class RemoveUserCommandValidator
+    public sealed class RemoveUserCommandValidator
         : AbstractValidator<RemoveUserCommand>
     {
         public RemoveUserCommandValidator()

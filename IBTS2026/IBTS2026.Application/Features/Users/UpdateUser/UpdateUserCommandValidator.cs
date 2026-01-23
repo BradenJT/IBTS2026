@@ -2,7 +2,7 @@
 
 namespace IBTS2026.Application.Features.Users.UpdateUser
 {
-    internal sealed class UpdateUserCommandValidator
+    public sealed class UpdateUserCommandValidator
         : AbstractValidator<UpdateUserCommand>
     {
         public UpdateUserCommandValidator()
