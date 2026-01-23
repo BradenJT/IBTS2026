@@ -8,7 +8,7 @@ using IBTS2026.Application.Features.Users.RemoveUser;
 using IBTS2026.Application.Features.Users.UpdateUser;
 using IBTS2026.Application.Models.Requests;
 
-namespace IBTS2026.Api.Endpoints.Users
+namespace IBTS2026.ApiService.Endpoints.Users
 {
     public static class UserEndpoints
     {
@@ -68,7 +68,14 @@ namespace IBTS2026.Api.Endpoints.Users
                 .SendAsync<CreateUserCommand, int>(command, ct);
 
                 return Results.Created($"/users/{userId}", userId);
-            });
+            })
+            .WithName("CreateUser")
+            .WithSummary("Create a new user")
+            .WithDescription("Creates a new user with the provided details. Returns the ID of the created user.")
+            .WithTags("Users")
+            .Produces<int>(StatusCodes.Status201Created)
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status500InternalServerError);
 
             app.MapPut("/users", async (
                 UpdateUserRequest request,
@@ -76,7 +83,7 @@ namespace IBTS2026.Api.Endpoints.Users
                 CancellationToken ct) =>
             {
                 var command = new UpdateUserCommand(
-                    request.UsertId,
+                    request.UserId,
                     request.Email,
                     request.FirstName,
                     request.LastName,
