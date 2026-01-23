@@ -2,7 +2,7 @@
 
 namespace IBTS2026.Application.Features.Users.CreateUser
 {
-    internal sealed class CreateUserCommandValidator
+    public sealed class CreateUserCommandValidator
         : AbstractValidator<CreateUserCommand>
     {
         public CreateUserCommandValidator()

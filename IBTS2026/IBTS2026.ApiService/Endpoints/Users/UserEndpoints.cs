@@ -77,13 +77,14 @@ namespace IBTS2026.ApiService.Endpoints.Users
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
-            app.MapPut("/users", async (
+            app.MapPut("/users/{id:int}", async (
+                int id,
                 UpdateUserRequest request,
                 IRequestDispatcher dispatcher,
                 CancellationToken ct) =>
             {
                 var command = new UpdateUserCommand(
-                    request.UserId,
+                    id,
                     request.Email,
                     request.FirstName,
                     request.LastName,
@@ -96,14 +97,12 @@ namespace IBTS2026.ApiService.Endpoints.Users
                 return result ? Results.NoContent() : Results.NotFound();
             });
 
-            app.MapDelete("/users", async (
-                RemoveUserRequest request,
+            app.MapDelete("/users/{id:int}", async (
+                int id,
                 IRequestDispatcher dispatcher,
                 CancellationToken ct) =>
             {
-                var command = new RemoveUserCommand(
-                    request.UserId
-                    );
+                var command = new RemoveUserCommand(id);
 
                 var result = await dispatcher
                 .SendAsync<RemoveUserCommand, bool>(command, ct);
