@@ -2,14 +2,9 @@
 
 namespace IBTS2026.Infrastructure.Repositories
 {
-    internal class RepositoryBase<T> where T : class
+    internal class RepositoryBase<T>(DbSet<T> dbSet) where T : class
     {
-        protected readonly DbSet<T> DbSet;
-
-        public RepositoryBase(DbSet<T> dbSet)
-        {
-            DbSet = dbSet ?? throw new ArgumentNullException(nameof(dbSet));
-        }
+        protected readonly DbSet<T> DbSet = dbSet ?? throw new ArgumentNullException(nameof(dbSet));
 
         protected IQueryable<T> Query() => DbSet.AsQueryable();
         protected void AddEntity(T entity) => DbSet.Add(entity);
