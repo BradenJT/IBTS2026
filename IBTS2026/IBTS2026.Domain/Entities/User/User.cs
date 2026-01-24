@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 namespace IBTS2026.Domain.Entities;
+
 public partial class User
 {
     public static User Create(
@@ -9,18 +10,6 @@ public partial class User
         string lastName,
         string role)
     {
-        if (string.IsNullOrWhiteSpace(email))
-            throw new ArgumentException("Email cannot be null or empty.", nameof(email));
-
-        if (string.IsNullOrWhiteSpace(firstName))
-            throw new ArgumentException("First name cannot be null or empty.", nameof(firstName));
-
-        if (string.IsNullOrWhiteSpace(lastName))
-            throw new ArgumentException("Last name cannot be null or empty.", nameof(lastName));
-
-        if (string.IsNullOrWhiteSpace(role))
-            throw new ArgumentException("Role cannot be null or empty.", nameof(role));
-
         return new User
         {
             Email = email,
@@ -31,17 +20,23 @@ public partial class User
         };
     }
 
-    public static User Update(
-        User user,
-        string email,
-        string firstName,
-        string lastName,
-        string role)
+    public void ChangeFirstName(string firstName)
     {
-        user.Email = email;
-        user.FirstName = firstName;
-        user.LastName = lastName;
-        user.Role = role;
-        return user;
+        FirstName = firstName;
+    }
+
+    public void ChangeLastName(string lastName)
+    {
+        LastName = lastName;
+    }
+
+    public void ChangeEmail(string email)
+    {
+        Email = email;
+    }
+
+    public void ChangeRole(string role)
+    {
+        Role = role;
     }
 }
