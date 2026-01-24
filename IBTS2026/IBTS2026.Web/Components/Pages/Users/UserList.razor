@@ -1,0 +1,186 @@
+@page "/users"
+@using IBTS2026.Web.Models
+@using IBTS2026.Web.Services.ApiClients
+@inject IUserApiClient UserApi
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Users</PageTitle>
+
+<h1>Users</h1>
+
+<div class="mb-3">
+    <button class="btn btn-primary" @onclick="NavigateToCreate">
+        Create New User
+    </button>
+</div>
+
+<div class="mb-3">
+    <input type="text" class="form-control" placeholder="Search users..."
+           @bind="searchTerm" @bind:event="oninput" @onkeyup="OnSearchKeyUp" />
+</div>
+
+@if (isLoading)
+{
+    <p><em>Loading...</em></p>
+}
+else if (errorMessage is not null)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (users is not null)
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Email</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in users.Items)
+            {
+                <tr>
+                    <td>@user.UserId</td>
+                    <td>@user.Email</td>
+                    <td>@user.FirstName</td>
+                    <td>@user.LastName</td>
+                    <td>@user.Role</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" @onclick="() => NavigateToEdit(user.UserId)">
+                            Edit
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteUser(user.UserId)">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <nav>
+        <ul class="pagination">
+            <li class="page-item @(users.HasPreviousPage ? "" : "disabled")">
+                <button class="page-link" @onclick="PreviousPage" disabled="@(!users.HasPreviousPage)">Previous</button>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">Page @users.PageNumber of @users.TotalPages (@users.TotalCount total)</span>
+            </li>
+            <li class="page-item @(users.HasNextPage ? "" : "disabled")">
+                <button class="page-link" @onclick="NextPage" disabled="@(!users.HasNextPage)">Next</button>
+            </li>
+        </ul>
+    </nav>
+}
+
+@code {
+    private PagedResultModel<UserModel>? users;
+    private bool isLoading = true;
+    private string? errorMessage;
+    private string searchTerm = string.Empty;
+    private int currentPage = 1;
+    private const int PageSize = 10;
+    private System.Timers.Timer? searchTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            users = await UserApi.GetUsersAsync(
+                currentPage,
+                PageSize,
+                string.IsNullOrWhiteSpace(searchTerm) ? null : searchTerm);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading users: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void OnSearchKeyUp()
+    {
+        searchTimer?.Stop();
+        searchTimer?.Dispose();
+        searchTimer = new System.Timers.Timer(300);
+        searchTimer.Elapsed += async (sender, e) =>
+        {
+            searchTimer?.Stop();
+            currentPage = 1;
+            await InvokeAsync(async () =>
+            {
+                await LoadUsers();
+                StateHasChanged();
+            });
+        };
+        searchTimer.Start();
+    }
+
+    private async Task PreviousPage()
+    {
+        if (users?.HasPreviousPage == true)
+        {
+            currentPage--;
+            await LoadUsers();
+        }
+    }
+
+    private async Task NextPage()
+    {
+        if (users?.HasNextPage == true)
+        {
+            currentPage++;
+            await LoadUsers();
+        }
+    }
+
+    private void NavigateToCreate()
+    {
+        Navigation.NavigateTo("/users/create");
+    }
+
+    private void NavigateToEdit(int userId)
+    {
+        Navigation.NavigateTo($"/users/edit/{userId}");
+    }
+
+    private async Task DeleteUser(int userId)
+    {
+        try
+        {
+            var success = await UserApi.DeleteUserAsync(userId);
+            if (success)
+            {
+                await LoadUsers();
+            }
+            else
+            {
+                errorMessage = "User not found.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error deleting user: {ex.Message}";
+        }
+    }
+
+    public void Dispose()
+    {
+        searchTimer?.Dispose();
+    }
+}

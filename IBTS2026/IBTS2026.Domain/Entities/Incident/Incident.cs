@@ -1,4 +1,7 @@
 ﻿#nullable enable
+
+using IBTS2026.Domain.Enums;
+
 namespace IBTS2026.Domain.Entities;
 
 public partial class Incident
@@ -9,8 +12,7 @@ public partial class Incident
         int statusId,
         int priorityId,
         int createdByUserId,
-        int? assignedToUserId,
-        DateTime createdAt)
+        int? assignedToUserId)
     {
         return new Incident
         {
@@ -20,23 +22,56 @@ public partial class Incident
             PriorityId = priorityId,
             CreatedBy = createdByUserId,
             AssignedTo = assignedToUserId,
-            CreatedAt = createdAt
+            CreatedAt = DateTime.UtcNow
         };
     }
 
-    public static Incident Update(
-        Incident incident,
-        string title,
-        string description,
-        int statusId,
-        int priorityId,
-        int? assignedToUserId)
+    public void ChangeTitle(string title)
     {
-        incident.Title = title;
-        incident.Description = description;
-        incident.StatusId = statusId;
-        incident.PriorityId = priorityId;
-        incident.AssignedTo = assignedToUserId;
-        return incident;
+        Title = title;
+    }
+
+    public void ChangeDescription(string description)
+    {
+        Description = description;
+    }
+
+    public void ChangePriority(int priorityId)
+    {
+        PriorityId = priorityId;
+    }
+
+    public void AssignTo(int? userId)
+    {
+        AssignedTo = userId;
+    }
+
+    public void ChangeStatus(int newStatusId)
+    {
+        // Status transition validation
+        var currentStatus = (IncidentStatus)StatusId;
+        var targetStatus = (IncidentStatus)newStatusId;
+
+        if (!IsValidStatusTransition(currentStatus, targetStatus))
+        {
+            throw new InvalidOperationException(
+                $"Invalid status transition from {currentStatus} to {targetStatus}.");
+        }
+
+        StatusId = newStatusId;
+    }
+
+    private static bool IsValidStatusTransition(IncidentStatus current, IncidentStatus target)
+    {
+        // Allow same status (no-op)
+        if (current == target) return true;
+
+        return current switch
+        {
+            IncidentStatus.Open => target is IncidentStatus.InProgress or IncidentStatus.Closed,
+            IncidentStatus.InProgress => target is IncidentStatus.Open or IncidentStatus.Closed,
+            IncidentStatus.Closed => target is IncidentStatus.Open, // Can reopen
+            _ => false
+        };
     }
 }

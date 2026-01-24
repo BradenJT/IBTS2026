@@ -1,0 +1,171 @@
+@page "/incidents/edit/{IncidentId:int}"
+@using IBTS2026.Web.Models
+@using IBTS2026.Web.Services.ApiClients
+@inject IIncidentApiClient IncidentApi
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Edit Incident</PageTitle>
+
+<h1>Edit Incident #@IncidentId</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        @if (isLoading)
+        {
+            <p><em>Loading...</em></p>
+        }
+        else if (notFound)
+        {
+            <div class="alert alert-warning">Incident not found.</div>
+            <button class="btn btn-secondary" @onclick="Cancel">Back to Incidents</button>
+        }
+        else
+        {
+            @if (errorMessage is not null)
+            {
+                <div class="alert alert-danger">@errorMessage</div>
+            }
+
+            <EditForm Model="incident" OnValidSubmit="HandleSubmit" FormName="EditIncidentForm">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-danger" />
+
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title</label>
+                    <InputText id="title" class="form-control" @bind-Value="incident.Title" />
+                    <ValidationMessage For="() => incident.Title" class="text-danger" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <InputTextArea id="description" class="form-control" rows="5" @bind-Value="incident.Description" />
+                    <ValidationMessage For="() => incident.Description" class="text-danger" />
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="priority" class="form-label">Priority</label>
+                        <InputSelect id="priority" class="form-select" @bind-Value="incident.PriorityId">
+                            <option value="1">Low</option>
+                            <option value="2">Medium</option>
+                            <option value="3">High</option>
+                            <option value="4">Critical</option>
+                        </InputSelect>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <InputSelect id="status" class="form-select" @bind-Value="incident.StatusId">
+                            <option value="1">Open</option>
+                            <option value="2">In Progress</option>
+                            <option value="3">Closed</option>
+                        </InputSelect>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="assignedTo" class="form-label">Assigned To (User ID, optional)</label>
+                    <InputNumber id="assignedTo" class="form-control" @bind-Value="incident.AssignedToUserId" />
+                </div>
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <span>Saving...</span>
+                        }
+                        else
+                        {
+                            <span>Save Changes</span>
+                        }
+                    </button>
+                    <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+                </div>
+            </EditForm>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int IncidentId { get; set; }
+
+    private UpdateIncidentModel incident = new();
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private bool notFound = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadIncident();
+    }
+
+    private async Task LoadIncident()
+    {
+        try
+        {
+            isLoading = true;
+            var existingIncident = await IncidentApi.GetIncidentAsync(IncidentId);
+
+            if (existingIncident is null)
+            {
+                notFound = true;
+            }
+            else
+            {
+                incident = new UpdateIncidentModel
+                {
+                    Title = existingIncident.Title,
+                    Description = existingIncident.Description,
+                    StatusId = existingIncident.StatusId,
+                    PriorityId = existingIncident.PriorityId,
+                    AssignedToUserId = existingIncident.AssignedTo
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading incident: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            var success = await IncidentApi.UpdateIncidentAsync(IncidentId, incident);
+
+            if (success)
+            {
+                Navigation.NavigateTo($"/incidents/{IncidentId}");
+            }
+            else
+            {
+                errorMessage = "Incident not found or update failed.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating incident: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo($"/incidents/{IncidentId}");
+    }
+}

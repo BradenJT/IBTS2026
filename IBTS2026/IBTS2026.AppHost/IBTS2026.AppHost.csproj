@@ -13,6 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\IBTS2026.ApiService\IBTS2026.ApiService.csproj" />
     <ProjectReference Include="..\IBTS2026.Web\IBTS2026.Web.csproj" />
+    <ProjectReference Include="..\IBTS2026.Worker\IBTS2026.Worker.csproj" />
   </ItemGroup>
 
   <ItemGroup>

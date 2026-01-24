@@ -1,0 +1,202 @@
+@page "/incidents/{IncidentId:int}"
+@using IBTS2026.Web.Models
+@using IBTS2026.Web.Services.ApiClients
+@inject IIncidentApiClient IncidentApi
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Incident Details</PageTitle>
+
+@if (isLoading)
+{
+    <p><em>Loading...</em></p>
+}
+else if (notFound)
+{
+    <div class="alert alert-warning">Incident not found.</div>
+    <button class="btn btn-secondary" @onclick="NavigateToList">Back to Incidents</button>
+}
+else if (incident is not null)
+{
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Incident #@incident.IncidentId</h1>
+        <div>
+            <button class="btn btn-primary" @onclick="NavigateToEdit">Edit</button>
+            <button class="btn btn-secondary" @onclick="NavigateToList">Back to List</button>
+        </div>
+    </div>
+
+    @if (errorMessage is not null)
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <div class="card">
+        <div class="card-header">
+            <h4>@incident.Title</h4>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <strong>Status:</strong>
+                    <span class="badge @GetStatusBadgeClass(incident.StatusId) ms-2">
+                        @incident.StatusName
+                    </span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Priority:</strong>
+                    <span class="badge @GetPriorityBadgeClass(incident.PriorityId) ms-2">
+                        @incident.PriorityName
+                    </span>
+                </div>
+                <div class="col-md-3">
+                    <strong>Created By:</strong> User #@incident.CreatedBy
+                </div>
+                <div class="col-md-3">
+                    <strong>Assigned To:</strong>
+                    @if (incident.AssignedTo.HasValue)
+                    {
+                        <span>User #@incident.AssignedTo</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Unassigned</span>
+                    }
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12">
+                    <strong>Created At:</strong> @incident.CreatedAt.ToString("F")
+                </div>
+            </div>
+
+            <hr />
+
+            <div class="row">
+                <div class="col-12">
+                    <h5>Description</h5>
+                    <p class="text-muted" style="white-space: pre-wrap;">@incident.Description</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h5>Quick Actions</h5>
+        <div class="btn-group">
+            @if (incident.StatusId == 1) // Open
+            {
+                <button class="btn btn-outline-warning" @onclick="() => ChangeStatus(2)">Start Progress</button>
+                <button class="btn btn-outline-success" @onclick="() => ChangeStatus(3)">Close</button>
+            }
+            else if (incident.StatusId == 2) // In Progress
+            {
+                <button class="btn btn-outline-primary" @onclick="() => ChangeStatus(1)">Reopen</button>
+                <button class="btn btn-outline-success" @onclick="() => ChangeStatus(3)">Close</button>
+            }
+            else if (incident.StatusId == 3) // Closed
+            {
+                <button class="btn btn-outline-primary" @onclick="() => ChangeStatus(1)">Reopen</button>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int IncidentId { get; set; }
+
+    private IncidentDetailsModel? incident;
+    private bool isLoading = true;
+    private bool notFound = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadIncident();
+    }
+
+    private async Task LoadIncident()
+    {
+        try
+        {
+            isLoading = true;
+            incident = await IncidentApi.GetIncidentAsync(IncidentId);
+
+            if (incident is null)
+            {
+                notFound = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading incident: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task ChangeStatus(int newStatusId)
+    {
+        if (incident is null) return;
+
+        try
+        {
+            errorMessage = null;
+
+            var updateModel = new UpdateIncidentModel
+            {
+                Title = incident.Title,
+                Description = incident.Description,
+                StatusId = newStatusId,
+                PriorityId = incident.PriorityId,
+                AssignedToUserId = incident.AssignedTo
+            };
+
+            var success = await IncidentApi.UpdateIncidentAsync(IncidentId, updateModel);
+
+            if (success)
+            {
+                await LoadIncident();
+            }
+            else
+            {
+                errorMessage = "Failed to update status.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error changing status: {ex.Message}";
+        }
+    }
+
+    private void NavigateToEdit()
+    {
+        Navigation.NavigateTo($"/incidents/edit/{IncidentId}");
+    }
+
+    private void NavigateToList()
+    {
+        Navigation.NavigateTo("/incidents");
+    }
+
+    private static string GetStatusBadgeClass(int statusId) => statusId switch
+    {
+        1 => "bg-primary",
+        2 => "bg-warning",
+        3 => "bg-success",
+        _ => "bg-secondary"
+    };
+
+    private static string GetPriorityBadgeClass(int priorityId) => priorityId switch
+    {
+        1 => "bg-info",
+        2 => "bg-warning",
+        3 => "bg-danger",
+        4 => "bg-dark",
+        _ => "bg-secondary"
+    };
+}

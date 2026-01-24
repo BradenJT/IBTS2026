@@ -1,4 +1,6 @@
+using IBTS2026.ApiService.Endpoints.Incidents;
 using IBTS2026.ApiService.Endpoints.Users;
+using IBTS2026.ApiService.Middleware;
 using IBTS2026.Application;
 using IBTS2026.Infrastructure;
 using IBTS2026.Infrastructure.Persistence;
@@ -11,6 +13,7 @@ builder.AddServiceDefaults();
 
 // Add services to the container.
 builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -42,8 +45,9 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-// Map User endpoints
+// Map endpoints
 UserEndpoints.Map(app);
+IncidentEndpoints.Map(app);
 
 app.MapDefaultEndpoints();
 

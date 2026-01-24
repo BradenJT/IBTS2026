@@ -1,0 +1,246 @@
+@page "/incidents"
+@using IBTS2026.Web.Models
+@using IBTS2026.Web.Services.ApiClients
+@inject IIncidentApiClient IncidentApi
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Incidents</PageTitle>
+
+<h1>Incidents</h1>
+
+<div class="mb-3">
+    <button class="btn btn-primary" @onclick="NavigateToCreate">
+        Create New Incident
+    </button>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-4">
+        <input type="text" class="form-control" placeholder="Search incidents..."
+               @bind="searchTerm" @bind:event="oninput" @onkeyup="OnSearchKeyUp" />
+    </div>
+    <div class="col-md-2">
+        <select class="form-select" @bind="statusFilter" @bind:after="OnFilterChange">
+            <option value="">All Statuses</option>
+            <option value="1">Open</option>
+            <option value="2">In Progress</option>
+            <option value="3">Closed</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select class="form-select" @bind="priorityFilter" @bind:after="OnFilterChange">
+            <option value="">All Priorities</option>
+            <option value="1">Low</option>
+            <option value="2">Medium</option>
+            <option value="3">High</option>
+            <option value="4">Critical</option>
+        </select>
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <p><em>Loading...</em></p>
+}
+else if (errorMessage is not null)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (incidents is not null)
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var incident in incidents.Items)
+            {
+                <tr>
+                    <td>@incident.IncidentId</td>
+                    <td>
+                        <a href="/incidents/@incident.IncidentId">@incident.Title</a>
+                    </td>
+                    <td>
+                        <span class="badge @GetStatusBadgeClass(incident.StatusId)">
+                            @incident.StatusName
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge @GetPriorityBadgeClass(incident.PriorityId)">
+                            @incident.PriorityName
+                        </span>
+                    </td>
+                    <td>@incident.CreatedAt.ToString("g")</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" @onclick="() => NavigateToDetail(incident.IncidentId)">
+                            View
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteIncident(incident.IncidentId)">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <nav>
+        <ul class="pagination">
+            <li class="page-item @(incidents.HasPreviousPage ? "" : "disabled")">
+                <button class="page-link" @onclick="PreviousPage" disabled="@(!incidents.HasPreviousPage)">Previous</button>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">Page @incidents.PageNumber of @incidents.TotalPages (@incidents.TotalCount total)</span>
+            </li>
+            <li class="page-item @(incidents.HasNextPage ? "" : "disabled")">
+                <button class="page-link" @onclick="NextPage" disabled="@(!incidents.HasNextPage)">Next</button>
+            </li>
+        </ul>
+    </nav>
+}
+
+@code {
+    private PagedResultModel<IncidentModel>? incidents;
+    private bool isLoading = true;
+    private string? errorMessage;
+    private string searchTerm = string.Empty;
+    private string statusFilter = string.Empty;
+    private string priorityFilter = string.Empty;
+    private int currentPage = 1;
+    private const int PageSize = 10;
+    private System.Timers.Timer? searchTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadIncidents();
+    }
+
+    private async Task LoadIncidents()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+
+            int? statusId = string.IsNullOrEmpty(statusFilter) ? null : int.Parse(statusFilter);
+            int? priorityId = string.IsNullOrEmpty(priorityFilter) ? null : int.Parse(priorityFilter);
+
+            incidents = await IncidentApi.GetIncidentsAsync(
+                currentPage,
+                PageSize,
+                string.IsNullOrWhiteSpace(searchTerm) ? null : searchTerm,
+                statusId: statusId,
+                priorityId: priorityId);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading incidents: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void OnSearchKeyUp()
+    {
+        searchTimer?.Stop();
+        searchTimer?.Dispose();
+        searchTimer = new System.Timers.Timer(300);
+        searchTimer.Elapsed += async (sender, e) =>
+        {
+            searchTimer?.Stop();
+            currentPage = 1;
+            await InvokeAsync(async () =>
+            {
+                await LoadIncidents();
+                StateHasChanged();
+            });
+        };
+        searchTimer.Start();
+    }
+
+    private async Task OnFilterChange()
+    {
+        currentPage = 1;
+        await LoadIncidents();
+    }
+
+    private async Task PreviousPage()
+    {
+        if (incidents?.HasPreviousPage == true)
+        {
+            currentPage--;
+            await LoadIncidents();
+        }
+    }
+
+    private async Task NextPage()
+    {
+        if (incidents?.HasNextPage == true)
+        {
+            currentPage++;
+            await LoadIncidents();
+        }
+    }
+
+    private void NavigateToCreate()
+    {
+        Navigation.NavigateTo("/incidents/create");
+    }
+
+    private void NavigateToDetail(int incidentId)
+    {
+        Navigation.NavigateTo($"/incidents/{incidentId}");
+    }
+
+    private async Task DeleteIncident(int incidentId)
+    {
+        try
+        {
+            var success = await IncidentApi.DeleteIncidentAsync(incidentId);
+            if (success)
+            {
+                await LoadIncidents();
+            }
+            else
+            {
+                errorMessage = "Incident not found.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error deleting incident: {ex.Message}";
+        }
+    }
+
+    private static string GetStatusBadgeClass(int statusId) => statusId switch
+    {
+        1 => "bg-primary",      // Open
+        2 => "bg-warning",      // In Progress
+        3 => "bg-success",      // Closed
+        _ => "bg-secondary"
+    };
+
+    private static string GetPriorityBadgeClass(int priorityId) => priorityId switch
+    {
+        1 => "bg-info",         // Low
+        2 => "bg-warning",      // Medium
+        3 => "bg-danger",       // High
+        4 => "bg-dark",         // Critical
+        _ => "bg-secondary"
+    };
+
+    public void Dispose()
+    {
+        searchTimer?.Dispose();
+    }
+}

@@ -12,7 +12,7 @@ namespace IBTS2026.Application.Features.Incidents.CreateIncident
         IValidator<CreateIncidentCommand> validator) : IRequestHandler<CreateIncidentCommand, int>
     {
         private readonly IIncidentRepository _incidents = incidents ?? throw new ArgumentNullException(nameof(incidents));
-        private readonly IUnitOfWork _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(_unitOfWork));
+        private readonly IUnitOfWork _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         private readonly IValidator<CreateIncidentCommand> _validator = validator ?? throw new ArgumentNullException(nameof(validator));
 
         public async Task<int> Handle(CreateIncidentCommand command, CancellationToken ct)
@@ -25,12 +25,11 @@ namespace IBTS2026.Application.Features.Incidents.CreateIncident
                 command.StatusId,
                 command.PriorityId,
                 command.CreatedByUserId,
-                command.AssignedToUserId,
-                DateTime.UtcNow);
+                command.AssignedToUserId);
 
             _incidents.Add(incident);
 
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync(ct);
 
             return incident.IncidentId;
         }
