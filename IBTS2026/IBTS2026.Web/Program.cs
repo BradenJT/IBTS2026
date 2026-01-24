@@ -1,5 +1,6 @@
 using IBTS2026.Web;
 using IBTS2026.Web.Components;
+using IBTS2026.Web.Services.ApiClients;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,17 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddOutputCache();
+
+// Register HTTP clients for API access
+builder.Services.AddHttpClient<IUserApiClient, UserApiClient>(client =>
+{
+    client.BaseAddress = new Uri("https+http://apiservice");
+});
+
+builder.Services.AddHttpClient<IIncidentApiClient, IncidentApiClient>(client =>
+{
+    client.BaseAddress = new Uri("https+http://apiservice");
+});
 
 var app = builder.Build();
 

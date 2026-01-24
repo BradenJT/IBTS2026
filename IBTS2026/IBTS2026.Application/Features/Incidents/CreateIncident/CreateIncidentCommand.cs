@@ -6,6 +6,5 @@
         int StatusId,
         int PriorityId,
         int CreatedByUserId,
-        int AssignedToUserId,
-        DateTime CreatedAt);
+        int? AssignedToUserId);
 }

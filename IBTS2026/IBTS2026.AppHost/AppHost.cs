@@ -16,4 +16,8 @@ builder.AddProject<Projects.IBTS2026_Web>("webfrontend")
     .WithReference(apiService)
     .WaitFor(apiService);
 
+builder.AddProject<Projects.IBTS2026_Worker>("worker")
+    .WithReference(database)
+    .WaitFor(database);
+
 builder.Build().Run();

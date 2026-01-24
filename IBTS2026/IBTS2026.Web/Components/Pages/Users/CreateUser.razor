@@ -1,0 +1,94 @@
+@page "/users/create"
+@using IBTS2026.Web.Models
+@using IBTS2026.Web.Services.ApiClients
+@inject IUserApiClient UserApi
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Create User</PageTitle>
+
+<h1>Create User</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        @if (errorMessage is not null)
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        <EditForm Model="user" OnValidSubmit="HandleSubmit" FormName="CreateUserForm">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <InputText id="email" class="form-control" @bind-Value="user.Email" />
+                <ValidationMessage For="() => user.Email" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
+                <label for="firstName" class="form-label">First Name</label>
+                <InputText id="firstName" class="form-control" @bind-Value="user.FirstName" />
+                <ValidationMessage For="() => user.FirstName" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
+                <label for="lastName" class="form-label">Last Name</label>
+                <InputText id="lastName" class="form-control" @bind-Value="user.LastName" />
+                <ValidationMessage For="() => user.LastName" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
+                <label for="role" class="form-label">Role</label>
+                <InputText id="role" class="form-control" @bind-Value="user.Role" />
+                <ValidationMessage For="() => user.Role" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                    @if (isSubmitting)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span>Creating...</span>
+                    }
+                    else
+                    {
+                        <span>Create User</span>
+                    }
+                </button>
+                <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private CreateUserModel user = new();
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            var userId = await UserApi.CreateUserAsync(user);
+            Navigation.NavigateTo("/users");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error creating user: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/users");
+    }
+}

@@ -1,0 +1,120 @@
+@page "/incidents/create"
+@using IBTS2026.Web.Models
+@using IBTS2026.Web.Services.ApiClients
+@inject IIncidentApiClient IncidentApi
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Create Incident</PageTitle>
+
+<h1>Create Incident</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        @if (errorMessage is not null)
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        <EditForm Model="incident" OnValidSubmit="HandleSubmit" FormName="CreateIncidentForm">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+
+            <div class="mb-3">
+                <label for="title" class="form-label">Title</label>
+                <InputText id="title" class="form-control" @bind-Value="incident.Title" />
+                <ValidationMessage For="() => incident.Title" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <InputTextArea id="description" class="form-control" rows="5" @bind-Value="incident.Description" />
+                <ValidationMessage For="() => incident.Description" class="text-danger" />
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="priority" class="form-label">Priority</label>
+                    <InputSelect id="priority" class="form-select" @bind-Value="incident.PriorityId">
+                        <option value="1">Low</option>
+                        <option value="2">Medium</option>
+                        <option value="3">High</option>
+                        <option value="4">Critical</option>
+                    </InputSelect>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="status" class="form-label">Initial Status</label>
+                    <InputSelect id="status" class="form-select" @bind-Value="incident.StatusId">
+                        <option value="1">Open</option>
+                        <option value="2">In Progress</option>
+                    </InputSelect>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="createdBy" class="form-label">Created By (User ID)</label>
+                    <InputNumber id="createdBy" class="form-control" @bind-Value="incident.CreatedByUserId" />
+                    <ValidationMessage For="() => incident.CreatedByUserId" class="text-danger" />
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="assignedTo" class="form-label">Assigned To (User ID, optional)</label>
+                    <InputNumber id="assignedTo" class="form-control" @bind-Value="incident.AssignedToUserId" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                    @if (isSubmitting)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span>Creating...</span>
+                    }
+                    else
+                    {
+                        <span>Create Incident</span>
+                    }
+                </button>
+                <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private CreateIncidentModel incident = new()
+    {
+        StatusId = 1,
+        PriorityId = 2,
+        CreatedByUserId = 1
+    };
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            var incidentId = await IncidentApi.CreateIncidentAsync(incident);
+            Navigation.NavigateTo($"/incidents/{incidentId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error creating incident: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/incidents");
+    }
+}
