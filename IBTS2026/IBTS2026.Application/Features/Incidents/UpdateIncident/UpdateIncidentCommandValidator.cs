@@ -3,7 +3,7 @@ using IBTS2026.Domain.Enums;
 
 namespace IBTS2026.Application.Features.Incidents.UpdateIncident
 {
-    internal sealed class UpdateIncidentCommandValidator
+    public sealed class UpdateIncidentCommandValidator
         : AbstractValidator<UpdateIncidentCommand>
     {
         public UpdateIncidentCommandValidator()

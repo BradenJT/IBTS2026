@@ -5,7 +5,8 @@
       "Bash(dotnet build:*)",
       "Bash(dotnet tool update:*)",
       "Bash(dotnet ef migrations add:*)",
-      "Bash(dotnet test:*)"
+      "Bash(dotnet test:*)",
+      "Bash(dotnet run:*)"
     ]
   }
 }

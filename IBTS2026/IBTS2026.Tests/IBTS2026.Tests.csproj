@@ -15,11 +15,14 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.Testing" Version="13.1.0" />
+    <PackageReference Include="FluentAssertions" Version="8.2.0" />
     <PackageReference Include="MSTest" Version="4.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\IBTS2026.AppHost\IBTS2026.AppHost.csproj" />
+    <ProjectReference Include="..\IBTS2026.Application\IBTS2026.Application.csproj" />
+    <ProjectReference Include="..\IBTS2026.Domain\IBTS2026.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
