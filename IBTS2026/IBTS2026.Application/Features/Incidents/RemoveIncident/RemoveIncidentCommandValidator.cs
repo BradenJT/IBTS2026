@@ -2,7 +2,7 @@
 
 namespace IBTS2026.Application.Features.Incidents.RemoveIncident
 {
-    internal sealed class RemoveIncidentCommandValidator
+    public sealed class RemoveIncidentCommandValidator
         :AbstractValidator<RemoveIncidentCommand>
     {
         public RemoveIncidentCommandValidator()

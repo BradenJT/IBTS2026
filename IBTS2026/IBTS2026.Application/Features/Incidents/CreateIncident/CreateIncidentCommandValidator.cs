@@ -2,7 +2,7 @@
 
 namespace IBTS2026.Application.Features.Incidents.CreateIncident
 {
-    internal sealed class CreateIncidentCommandValidator
+    public sealed class CreateIncidentCommandValidator
         : AbstractValidator<CreateIncidentCommand>
     {
         public CreateIncidentCommandValidator()
