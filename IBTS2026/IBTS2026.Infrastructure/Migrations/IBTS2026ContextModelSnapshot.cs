@@ -17,7 +17,7 @@ namespace IBTS2026.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.9")
+                .HasAnnotation("ProductVersion", "10.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -136,6 +136,10 @@ namespace IBTS2026.Infrastructure.Migrations
                     b.HasKey("IncidentId")
                         .HasName("PK__Incident__3D8053B268C6C156");
 
+                    b.HasIndex("AssignedTo");
+
+                    b.HasIndex("CreatedBy");
+
                     b.HasIndex("PriorityId");
 
                     b.HasIndex("StatusId");
@@ -152,6 +156,94 @@ namespace IBTS2026.Infrastructure.Migrations
                                     .HasPeriodEnd("ValidTo")
                                     .HasColumnName("ValidTo");
                             }));
+                });
+
+            modelBuilder.Entity("IBTS2026.Domain.Entities.IncidentNote", b =>
+                {
+                    b.Property<int>("IncidentNoteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IncidentNoteId"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IncidentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("IncidentNoteId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex(new[] { "CreatedAt" }, "IX_IncidentNote_CreatedAt");
+
+                    b.HasIndex(new[] { "IncidentId" }, "IX_IncidentNote_IncidentId");
+
+                    b.ToTable("IncidentNote", (string)null);
+                });
+
+            modelBuilder.Entity("IBTS2026.Domain.Entities.NotificationOutbox", b =>
+                {
+                    b.Property<int>("NotificationOutboxId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("NotificationOutboxId"));
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FailedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NotificationType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RecipientEmail")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(250)");
+
+                    b.Property<int?>("RelatedIncidentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(500)");
+
+                    b.HasKey("NotificationOutboxId");
+
+                    b.HasIndex(new[] { "ProcessedAt", "FailedAt", "RetryCount" }, "IX_NotificationOutbox_PendingNotifications");
+
+                    b.HasIndex(new[] { "ProcessedAt" }, "IX_NotificationOutbox_ProcessedAt");
+
+                    b.ToTable("NotificationOutbox", (string)null);
                 });
 
             modelBuilder.Entity("IBTS2026.Domain.Entities.Priority", b =>
@@ -175,6 +267,28 @@ namespace IBTS2026.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Priority", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            PriorityId = 1,
+                            PriorityName = "Low"
+                        },
+                        new
+                        {
+                            PriorityId = 2,
+                            PriorityName = "Medium"
+                        },
+                        new
+                        {
+                            PriorityId = 3,
+                            PriorityName = "High"
+                        },
+                        new
+                        {
+                            PriorityId = 4,
+                            PriorityName = "Critical"
+                        });
                 });
 
             modelBuilder.Entity("IBTS2026.Domain.Entities.Status", b =>
@@ -198,6 +312,28 @@ namespace IBTS2026.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Status", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            StatusId = 1,
+                            StatusName = "Open"
+                        },
+                        new
+                        {
+                            StatusId = 2,
+                            StatusName = "In Progress"
+                        },
+                        new
+                        {
+                            StatusId = 3,
+                            StatusName = "Closed"
+                        },
+                        new
+                        {
+                            StatusId = 4,
+                            StatusName = "Unknown"
+                        });
                 });
 
             modelBuilder.Entity("IBTS2026.Domain.Entities.User", b =>
@@ -245,6 +381,17 @@ namespace IBTS2026.Infrastructure.Migrations
 
             modelBuilder.Entity("IBTS2026.Domain.Entities.Incident", b =>
                 {
+                    b.HasOne("IBTS2026.Domain.Entities.User", "AssignedToUser")
+                        .WithMany()
+                        .HasForeignKey("AssignedTo")
+                        .HasConstraintName("FK_Incident_AssignedToUser");
+
+                    b.HasOne("IBTS2026.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .IsRequired()
+                        .HasConstraintName("FK_Incident_CreatedByUser");
+
                     b.HasOne("IBTS2026.Domain.Entities.Priority", "Priority")
                         .WithMany("Incidents")
                         .HasForeignKey("PriorityId")
@@ -257,9 +404,33 @@ namespace IBTS2026.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("FK__Incident__Status__6D0D32F4");
 
+                    b.Navigation("AssignedToUser");
+
+                    b.Navigation("CreatedByUser");
+
                     b.Navigation("Priority");
 
                     b.Navigation("Status");
+                });
+
+            modelBuilder.Entity("IBTS2026.Domain.Entities.IncidentNote", b =>
+                {
+                    b.HasOne("IBTS2026.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .IsRequired()
+                        .HasConstraintName("FK_IncidentNote_User");
+
+                    b.HasOne("IBTS2026.Domain.Entities.Incident", "Incident")
+                        .WithMany()
+                        .HasForeignKey("IncidentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_IncidentNote_Incident");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Incident");
                 });
 
             modelBuilder.Entity("IBTS2026.Domain.Entities.Priority", b =>

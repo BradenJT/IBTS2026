@@ -10,20 +10,31 @@
     <nav class="nav flex-column">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill" aria-hidden="true"></span> Home
+                <i class="fa-solid fa-house nav-icon" aria-hidden="true"></i> Home
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="users">
-                <span class="bi bi-people-fill" aria-hidden="true"></span> Users
-            </NavLink>
-        </div>
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="users">
+                        <i class="fa-solid fa-users nav-icon" aria-hidden="true"></i> Users
+                    </NavLink>
+                </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="incidents">
-                <span class="bi bi-exclamation-triangle-fill" aria-hidden="true"></span> Incidents
-            </NavLink>
-        </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="incidents">
+                        <i class="fa-solid fa-triangle-exclamation nav-icon" aria-hidden="true"></i> Incidents
+                    </NavLink>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="login">
+                        <i class="fa-solid fa-right-to-bracket nav-icon" aria-hidden="true"></i> Login
+                    </NavLink>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
     </nav>
 </div>

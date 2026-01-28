@@ -2,6 +2,7 @@ using IBTS2026.Application;
 using IBTS2026.Infrastructure;
 using IBTS2026.Infrastructure.Persistence;
 using IBTS2026.Worker.Jobs;
+using Microsoft.EntityFrameworkCore;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -19,6 +20,15 @@ builder.Services.AddInfrastructure();
 
 // Register background jobs
 builder.Services.AddHostedService<IncidentStatusCheckJob>();
+builder.Services.AddHostedService<NotificationProcessorJob>();
 
 var host = builder.Build();
+
+// Apply pending migrations before starting background jobs
+using (var scope = host.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<IBTS2026Context>();
+    dbContext.Database.Migrate();
+}
+
 host.Run();

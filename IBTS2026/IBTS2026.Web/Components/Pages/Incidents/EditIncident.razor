@@ -2,6 +2,7 @@
 @using IBTS2026.Web.Models
 @using IBTS2026.Web.Services.ApiClients
 @inject IIncidentApiClient IncidentApi
+@inject ILookupApiClient LookupApi
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
@@ -47,26 +48,33 @@
                     <div class="col-md-6 mb-3">
                         <label for="priority" class="form-label">Priority</label>
                         <InputSelect id="priority" class="form-select" @bind-Value="incident.PriorityId">
-                            <option value="1">Low</option>
-                            <option value="2">Medium</option>
-                            <option value="3">High</option>
-                            <option value="4">Critical</option>
+                            @foreach (var priority in priorities)
+                            {
+                                <option value="@priority.PriorityId">@priority.PriorityName</option>
+                            }
                         </InputSelect>
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label for="status" class="form-label">Status</label>
                         <InputSelect id="status" class="form-select" @bind-Value="incident.StatusId">
-                            <option value="1">Open</option>
-                            <option value="2">In Progress</option>
-                            <option value="3">Closed</option>
+                            @foreach (var status in statuses)
+                            {
+                                <option value="@status.StatusId">@status.StatusName</option>
+                            }
                         </InputSelect>
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label for="assignedTo" class="form-label">Assigned To (User ID, optional)</label>
-                    <InputNumber id="assignedTo" class="form-control" @bind-Value="incident.AssignedToUserId" />
+                    <label for="assignedTo" class="form-label">Assigned To</label>
+                    <InputSelect id="assignedTo" class="form-select" @bind-Value="incident.AssignedToUserId">
+                        <option value="">-- Unassigned --</option>
+                        @foreach (var user in users)
+                        {
+                            <option value="@user.UserId">@user.FirstName @user.LastName</option>
+                        }
+                    </InputSelect>
                 </div>
 
                 <div class="mb-3">
@@ -93,6 +101,10 @@
     public int IncidentId { get; set; }
 
     private UpdateIncidentModel incident = new();
+    private List<PriorityModel> priorities = [];
+    private List<StatusModel> statuses = [];
+    private List<UserModel> users = [];
+
     private bool isLoading = true;
     private bool isSubmitting = false;
     private bool notFound = false;
@@ -100,15 +112,27 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadIncident();
+        await LoadData();
     }
 
-    private async Task LoadIncident()
+    private async Task LoadData()
     {
         try
         {
             isLoading = true;
-            var existingIncident = await IncidentApi.GetIncidentAsync(IncidentId);
+
+            var prioritiesTask = LookupApi.GetPrioritiesAsync();
+            var statusesTask = LookupApi.GetStatusesAsync();
+            var usersTask = LookupApi.GetUsersForDropdownAsync();
+            var incidentTask = IncidentApi.GetIncidentAsync(IncidentId);
+
+            await Task.WhenAll(prioritiesTask, statusesTask, usersTask, incidentTask);
+
+            priorities = await prioritiesTask;
+            statuses = await statusesTask;
+            users = await usersTask;
+
+            var existingIncident = await incidentTask;
 
             if (existingIncident is null)
             {
@@ -128,7 +152,7 @@
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error loading incident: {ex.Message}";
+            errorMessage = $"Error loading data: {ex.Message}";
         }
         finally
         {

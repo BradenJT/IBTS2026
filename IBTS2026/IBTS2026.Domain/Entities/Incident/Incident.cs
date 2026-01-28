@@ -6,6 +6,10 @@ namespace IBTS2026.Domain.Entities;
 
 public partial class Incident
 {
+    // Navigation properties not in the generated file
+    public virtual User? CreatedByUser { get; set; }
+    public virtual User? AssignedToUser { get; set; }
+
     public static Incident Create(
         string title,
         string description,
