@@ -3,6 +3,7 @@ using IBTS2026.Application.Abstractions.Requests;
 using IBTS2026.Application.Features.Incidents.CreateIncident;
 using IBTS2026.Application.Features.Incidents.RemoveIncident;
 using IBTS2026.Application.Features.Incidents.UpdateIncident;
+using IBTS2026.Application.Features.IncidentNotes.CreateIncidentNote;
 using IBTS2026.Application.Features.Users.CreateUser;
 using IBTS2026.Application.Features.Users.RemoveUser;
 using IBTS2026.Application.Features.Users.UpdateUser;
@@ -26,6 +27,9 @@ public static class DependencyInjection
         services.AddScoped<IRequestHandler<CreateIncidentCommand, int>, CreateIncidentHandler>();
         services.AddScoped<IRequestHandler<UpdateIncidentCommand, bool>, UpdateIncidentHandler>();
         services.AddScoped<IRequestHandler<RemoveIncidentCommand, bool>, RemoveIncidentHandler>();
+
+        // Register IncidentNote command handlers
+        services.AddScoped<IRequestHandler<CreateIncidentNoteCommand, int>, CreateIncidentNoteHandler>();
 
         // Register FluentValidation validators from this assembly
         services.AddValidatorsFromAssemblyContaining<CreateUserCommandValidator>();

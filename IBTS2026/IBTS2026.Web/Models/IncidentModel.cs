@@ -19,7 +19,9 @@ namespace IBTS2026.Web.Models
         int PriorityId,
         string PriorityName,
         int CreatedBy,
+        string CreatedByName,
         int? AssignedTo,
+        string? AssignedToName,
         DateTime CreatedAt);
 
     public sealed record CreateIncidentModel

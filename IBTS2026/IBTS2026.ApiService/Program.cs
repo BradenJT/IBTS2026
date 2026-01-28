@@ -1,4 +1,6 @@
+using IBTS2026.ApiService.Endpoints.IncidentNotes;
 using IBTS2026.ApiService.Endpoints.Incidents;
+using IBTS2026.ApiService.Endpoints.Lookups;
 using IBTS2026.ApiService.Endpoints.Users;
 using IBTS2026.ApiService.Middleware;
 using IBTS2026.Application;
@@ -49,6 +51,8 @@ if (app.Environment.IsDevelopment())
 // Map endpoints
 UserEndpoints.Map(app);
 IncidentEndpoints.Map(app);
+IncidentNoteEndpoints.Map(app);
+LookupEndpoints.Map(app);
 
 app.MapDefaultEndpoints();
 

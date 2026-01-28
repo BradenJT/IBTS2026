@@ -9,6 +9,8 @@ namespace IBTS2026.Application.Dtos.Incidents
         int PriorityId,
         string PriorityName,
         int CreatedBy,
+        string CreatedByName,
         int? AssignedTo,
+        string? AssignedToName,
         DateTime CreatedAt);
 }

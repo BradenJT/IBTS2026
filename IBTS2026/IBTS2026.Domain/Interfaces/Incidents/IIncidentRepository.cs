@@ -5,6 +5,7 @@ namespace IBTS2026.Domain.Interfaces.Incidents
     public interface IIncidentRepository
     {
         Task<Incident?> GetByIdAsync(int id, CancellationToken ct);
+        Task<Incident?> GetByIdWithDetailsAsync(int id, CancellationToken ct);
         void Add(Incident incident);
         void Update(Incident incident);
         void Remove(Incident incident);

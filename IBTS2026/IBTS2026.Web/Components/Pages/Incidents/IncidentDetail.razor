@@ -1,73 +1,97 @@
 @page "/incidents/{IncidentId:int}"
 @using IBTS2026.Web.Models
 @using IBTS2026.Web.Services.ApiClients
+@using IBTS2026.Web.Services.Auth
 @inject IIncidentApiClient IncidentApi
+@inject IIncidentNoteApiClient NoteApi
+@inject ILookupApiClient LookupApi
+@inject IAuthService AuthService
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
 <PageTitle>Incident Details</PageTitle>
 
-@if (isLoading)
+@if (_isLoading)
 {
     <p><em>Loading...</em></p>
 }
-else if (notFound)
+else if (_notFound)
 {
     <div class="alert alert-warning">Incident not found.</div>
     <button class="btn btn-secondary" @onclick="NavigateToList">Back to Incidents</button>
 }
-else if (incident is not null)
+else if (_incident is not null)
 {
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Incident #@incident.IncidentId</h1>
+        <h1>Incident #@_incident.IncidentId</h1>
         <div>
-            <button class="btn btn-primary" @onclick="NavigateToEdit">Edit</button>
             <button class="btn btn-secondary" @onclick="NavigateToList">Back to List</button>
         </div>
     </div>
 
-    @if (errorMessage is not null)
+    @if (_errorMessage is not null)
     {
-        <div class="alert alert-danger">@errorMessage</div>
+        <div class="alert alert-danger">@_errorMessage</div>
     }
 
-    <div class="card">
-        <div class="card-header">
-            <h4>@incident.Title</h4>
+    @if (_successMessage is not null)
+    {
+        <div class="alert alert-success">@_successMessage</div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">@_incident.Title</h4>
+            @if (HasChanges)
+            {
+                <div>
+                    <button class="btn btn-success btn-sm" @onclick="SaveChangesAsync" disabled="@_isSaving">
+                        @(_isSaving ? "Saving..." : "Save Changes")
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" @onclick="CancelChanges" disabled="@_isSaving">
+                        Cancel
+                    </button>
+                </div>
+            }
         </div>
         <div class="card-body">
             <div class="row mb-3">
-                <div class="col-md-3">
-                    <strong>Status:</strong>
-                    <span class="badge @GetStatusBadgeClass(incident.StatusId) ms-2">
-                        @incident.StatusName
-                    </span>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Status</label>
+                    <select class="form-select" @bind="_selectedStatusId">
+                        @foreach (var status in _statuses)
+                        {
+                            <option value="@status.StatusId">@status.StatusName</option>
+                        }
+                    </select>
                 </div>
-                <div class="col-md-3">
-                    <strong>Priority:</strong>
-                    <span class="badge @GetPriorityBadgeClass(incident.PriorityId) ms-2">
-                        @incident.PriorityName
-                    </span>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Priority</label>
+                    <select class="form-select" @bind="_selectedPriorityId">
+                        @foreach (var priority in _priorities)
+                        {
+                            <option value="@priority.PriorityId">@priority.PriorityName</option>
+                        }
+                    </select>
                 </div>
-                <div class="col-md-3">
-                    <strong>Created By:</strong> User #@incident.CreatedBy
-                </div>
-                <div class="col-md-3">
-                    <strong>Assigned To:</strong>
-                    @if (incident.AssignedTo.HasValue)
-                    {
-                        <span>User #@incident.AssignedTo</span>
-                    }
-                    else
-                    {
-                        <span class="text-muted">Unassigned</span>
-                    }
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Assigned To</label>
+                    <select class="form-select" @bind="_selectedAssignedToId">
+                        <option value="">Unassigned</option>
+                        @foreach (var user in _users)
+                        {
+                            <option value="@user.UserId">@user.FirstName @user.LastName</option>
+                        }
+                    </select>
                 </div>
             </div>
 
             <div class="row mb-3">
-                <div class="col-12">
-                    <strong>Created At:</strong> @incident.CreatedAt.ToString("F")
+                <div class="col-md-6">
+                    <strong>Created By:</strong> @_incident.CreatedByName
+                </div>
+                <div class="col-md-6">
+                    <strong>Created At:</strong> @_incident.CreatedAt.ToString("F")
                 </div>
             </div>
 
@@ -76,28 +100,55 @@ else if (incident is not null)
             <div class="row">
                 <div class="col-12">
                     <h5>Description</h5>
-                    <p class="text-muted" style="white-space: pre-wrap;">@incident.Description</p>
+                    <p class="text-muted" style="white-space: pre-wrap;">@_incident.Description</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="mt-4">
-        <h5>Quick Actions</h5>
-        <div class="btn-group">
-            @if (incident.StatusId == 1) // Open
+    <!-- Journal Notes Section -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Journal Notes</h5>
+        </div>
+        <div class="card-body">
+            <!-- Add Note Form -->
+            <div class="mb-4">
+                <div class="form-group">
+                    <label class="form-label">Add a Note</label>
+                    <textarea class="form-control" rows="3" placeholder="Enter your note..."
+                              @bind="_newNoteContent" disabled="@_isAddingNote"></textarea>
+                </div>
+                <button class="btn btn-primary mt-2" @onclick="AddNoteAsync"
+                        disabled="@(string.IsNullOrWhiteSpace(_newNoteContent) || _isAddingNote)">
+                    @(_isAddingNote ? "Adding..." : "Add Note")
+                </button>
+            </div>
+
+            @if (_noteError is not null)
             {
-                <button class="btn btn-outline-warning" @onclick="() => ChangeStatus(2)">Start Progress</button>
-                <button class="btn btn-outline-success" @onclick="() => ChangeStatus(3)">Close</button>
+                <div class="alert alert-danger">@_noteError</div>
             }
-            else if (incident.StatusId == 2) // In Progress
+
+            <hr />
+
+            <!-- Notes List -->
+            @if (_notes.Count == 0)
             {
-                <button class="btn btn-outline-primary" @onclick="() => ChangeStatus(1)">Reopen</button>
-                <button class="btn btn-outline-success" @onclick="() => ChangeStatus(3)">Close</button>
+                <p class="text-muted">No notes yet.</p>
             }
-            else if (incident.StatusId == 3) // Closed
+            else
             {
-                <button class="btn btn-outline-primary" @onclick="() => ChangeStatus(1)">Reopen</button>
+                @foreach (var note in _notes)
+                {
+                    <div class="note-item mb-3 p-3 border rounded">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <strong>@note.CreatedByName</strong>
+                            <small class="text-muted">@note.CreatedAt.ToString("g")</small>
+                        </div>
+                        <p class="mb-0 mt-2" style="white-space: pre-wrap;">@note.Content</p>
+                    </div>
+                }
             }
         </div>
     </div>
@@ -107,96 +158,193 @@ else if (incident is not null)
     [Parameter]
     public int IncidentId { get; set; }
 
-    private IncidentDetailsModel? incident;
-    private bool isLoading = true;
-    private bool notFound = false;
-    private string? errorMessage;
+    private IncidentDetailsModel? _incident;
+    private bool _isLoading = true;
+    private bool _notFound;
+    private bool _isSaving;
+    private bool _isAddingNote;
+    private string? _errorMessage;
+    private string? _successMessage;
+    private string? _noteError;
+
+    // Lookup data
+    private List<StatusModel> _statuses = [];
+    private List<PriorityModel> _priorities = [];
+    private List<UserModel> _users = [];
+
+    // Notes
+    private List<IncidentNoteModel> _notes = [];
+    private string _newNoteContent = string.Empty;
+
+    // Selected values (for change tracking)
+    private int _selectedStatusId;
+    private int _selectedPriorityId;
+    private int? _selectedAssignedToId;
+
+    // Original values (for change detection)
+    private int _originalStatusId;
+    private int _originalPriorityId;
+    private int? _originalAssignedToId;
+
+    private bool HasChanges =>
+        _selectedStatusId != _originalStatusId ||
+        _selectedPriorityId != _originalPriorityId ||
+        _selectedAssignedToId != _originalAssignedToId;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadIncident();
+        await LoadLookupsAsync();
+        await LoadIncidentAsync();
+        await LoadNotesAsync();
     }
 
-    private async Task LoadIncident()
+    private async Task LoadLookupsAsync()
     {
         try
         {
-            isLoading = true;
-            incident = await IncidentApi.GetIncidentAsync(IncidentId);
-
-            if (incident is null)
-            {
-                notFound = true;
-            }
+            _statuses = await LookupApi.GetStatusesAsync();
+            _priorities = await LookupApi.GetPrioritiesAsync();
+            _users = await LookupApi.GetUsersForDropdownAsync();
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error loading incident: {ex.Message}";
-        }
-        finally
-        {
-            isLoading = false;
+            _errorMessage = $"Error loading lookup data: {ex.Message}";
         }
     }
 
-    private async Task ChangeStatus(int newStatusId)
+    private async Task LoadIncidentAsync()
     {
-        if (incident is null) return;
+        try
+        {
+            _isLoading = true;
+            _incident = await IncidentApi.GetIncidentAsync(IncidentId);
+
+            if (_incident is null)
+            {
+                _notFound = true;
+                return;
+            }
+
+            // Initialize selected and original values
+            _selectedStatusId = _incident.StatusId;
+            _selectedPriorityId = _incident.PriorityId;
+            _selectedAssignedToId = _incident.AssignedTo;
+
+            _originalStatusId = _incident.StatusId;
+            _originalPriorityId = _incident.PriorityId;
+            _originalAssignedToId = _incident.AssignedTo;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error loading incident: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task LoadNotesAsync()
+    {
+        try
+        {
+            _notes = await NoteApi.GetNotesAsync(IncidentId);
+        }
+        catch (Exception ex)
+        {
+            _noteError = $"Error loading notes: {ex.Message}";
+        }
+    }
+
+    private async Task SaveChangesAsync()
+    {
+        if (_incident is null || !HasChanges) return;
 
         try
         {
-            errorMessage = null;
+            _isSaving = true;
+            _errorMessage = null;
+            _successMessage = null;
 
             var updateModel = new UpdateIncidentModel
             {
-                Title = incident.Title,
-                Description = incident.Description,
-                StatusId = newStatusId,
-                PriorityId = incident.PriorityId,
-                AssignedToUserId = incident.AssignedTo
+                Title = _incident.Title,
+                Description = _incident.Description,
+                StatusId = _selectedStatusId,
+                PriorityId = _selectedPriorityId,
+                AssignedToUserId = _selectedAssignedToId
             };
 
             var success = await IncidentApi.UpdateIncidentAsync(IncidentId, updateModel);
 
             if (success)
             {
-                await LoadIncident();
+                _successMessage = "Incident updated successfully.";
+                await LoadIncidentAsync();
             }
             else
             {
-                errorMessage = "Failed to update status.";
+                _errorMessage = "Failed to update incident.";
             }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error changing status: {ex.Message}";
+            _errorMessage = $"Error updating incident: {ex.Message}";
+        }
+        finally
+        {
+            _isSaving = false;
         }
     }
 
-    private void NavigateToEdit()
+    private void CancelChanges()
     {
-        Navigation.NavigateTo($"/incidents/edit/{IncidentId}");
+        _selectedStatusId = _originalStatusId;
+        _selectedPriorityId = _originalPriorityId;
+        _selectedAssignedToId = _originalAssignedToId;
+        _errorMessage = null;
+        _successMessage = null;
+    }
+
+    private async Task AddNoteAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_newNoteContent)) return;
+
+        try
+        {
+            _isAddingNote = true;
+            _noteError = null;
+
+            var currentUserId = AuthService.CurrentUserId;
+            if (currentUserId == null)
+            {
+                _noteError = "You must be logged in to add notes.";
+                return;
+            }
+
+            var model = new CreateIncidentNoteModel
+            {
+                CreatedByUserId = currentUserId.Value,
+                Content = _newNoteContent
+            };
+
+            await NoteApi.CreateNoteAsync(IncidentId, model);
+
+            _newNoteContent = string.Empty;
+            await LoadNotesAsync();
+        }
+        catch (Exception ex)
+        {
+            _noteError = $"Error adding note: {ex.Message}";
+        }
+        finally
+        {
+            _isAddingNote = false;
+        }
     }
 
     private void NavigateToList()
     {
         Navigation.NavigateTo("/incidents");
     }
-
-    private static string GetStatusBadgeClass(int statusId) => statusId switch
-    {
-        1 => "bg-primary",
-        2 => "bg-warning",
-        3 => "bg-success",
-        _ => "bg-secondary"
-    };
-
-    private static string GetPriorityBadgeClass(int priorityId) => priorityId switch
-    {
-        1 => "bg-info",
-        2 => "bg-warning",
-        3 => "bg-danger",
-        4 => "bg-dark",
-        _ => "bg-secondary"
-    };
 }

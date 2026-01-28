@@ -1,6 +1,8 @@
 using IBTS2026.Web;
 using IBTS2026.Web.Components;
 using IBTS2026.Web.Services.ApiClients;
+using IBTS2026.Web.Services.Auth;
+using Microsoft.AspNetCore.Components.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +15,11 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddOutputCache();
 
+// Register authentication services
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
 // Register HTTP clients for API access
 builder.Services.AddHttpClient<IUserApiClient, UserApiClient>(client =>
 {
@@ -20,6 +27,16 @@ builder.Services.AddHttpClient<IUserApiClient, UserApiClient>(client =>
 });
 
 builder.Services.AddHttpClient<IIncidentApiClient, IncidentApiClient>(client =>
+{
+    client.BaseAddress = new Uri("https+http://apiservice");
+});
+
+builder.Services.AddHttpClient<ILookupApiClient, LookupApiClient>(client =>
+{
+    client.BaseAddress = new Uri("https+http://apiservice");
+});
+
+builder.Services.AddHttpClient<IIncidentNoteApiClient, IncidentNoteApiClient>(client =>
 {
     client.BaseAddress = new Uri("https+http://apiservice");
 });

@@ -27,7 +27,17 @@ namespace IBTS2026.Infrastructure.Queries.Incidents
                     i.PriorityId,
                     i.Priority.PriorityName,
                     i.CreatedBy,
+                    _context.Users
+                        .Where(u => u.UserId == i.CreatedBy)
+                        .Select(u => u.FirstName + " " + u.LastName)
+                        .FirstOrDefault() ?? "Unknown",
                     i.AssignedTo,
+                    i.AssignedTo.HasValue
+                        ? _context.Users
+                            .Where(u => u.UserId == i.AssignedTo.Value)
+                            .Select(u => u.FirstName + " " + u.LastName)
+                            .FirstOrDefault()
+                        : null,
                     i.CreatedAt))
                 .FirstOrDefaultAsync(ct);
         }

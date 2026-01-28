@@ -1,0 +1,183 @@
+@page "/login"
+@using IBTS2026.Web.Models
+@using IBTS2026.Web.Services.ApiClients
+@using IBTS2026.Web.Services.Auth
+@inject ILookupApiClient LookupApi
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Login - IBTS</PageTitle>
+
+<div class="login-container">
+    <div class="login-card">
+        <h2>Login to IBTS</h2>
+        <p class="login-subtitle">Select a user to log in as (development mode)</p>
+
+        @if (_isLoading)
+        {
+            <div class="loading-spinner">Loading users...</div>
+        }
+        else if (_errorMessage != null)
+        {
+            <div class="error-message">@_errorMessage</div>
+        }
+        else
+        {
+            <div class="form-group">
+                <label for="userSelect">Select User</label>
+                <select id="userSelect" class="form-control" @bind="_selectedUserId">
+                    <option value="0">-- Select a user --</option>
+                    @foreach (var user in _users)
+                    {
+                        <option value="@user.UserId">@user.FirstName @user.LastName (@user.Email)</option>
+                    }
+                </select>
+            </div>
+
+            <button class="btn btn-primary login-btn"
+                    @onclick="HandleLoginAsync"
+                    disabled="@(_selectedUserId == 0 || _isLoggingIn)">
+                @if (_isLoggingIn)
+                {
+                    <span>Logging in...</span>
+                }
+                else
+                {
+                    <span>Login</span>
+                }
+            </button>
+        }
+    </div>
+</div>
+
+<style>
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+    }
+
+    .login-card {
+        background: #fff;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        max-width: 400px;
+        width: 100%;
+    }
+
+    .login-card h2 {
+        margin-bottom: 0.5rem;
+        color: #3B4252;
+    }
+
+    .login-subtitle {
+        color: #6c757d;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #434C5E;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    .form-control:focus {
+        border-color: #5E81AC;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(94, 129, 172, 0.25);
+    }
+
+    .login-btn {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: #5E81AC;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+    }
+
+    .login-btn:hover:not(:disabled) {
+        background-color: #4C6C8A;
+    }
+
+    .login-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .loading-spinner, .error-message {
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .error-message {
+        color: #dc3545;
+        background-color: #f8d7da;
+        border-radius: 4px;
+    }
+</style>
+
+@code {
+    private List<UserModel> _users = [];
+    private int _selectedUserId;
+    private bool _isLoading = true;
+    private bool _isLoggingIn;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _users = await LookupApi.GetUsersForDropdownAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Failed to load users: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task HandleLoginAsync()
+    {
+        if (_selectedUserId == 0)
+            return;
+
+        _isLoggingIn = true;
+        _errorMessage = null;
+
+        try
+        {
+            await AuthService.LoginAsync(_selectedUserId);
+            Navigation.NavigateTo("/incidents", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Login failed: {ex.Message}";
+        }
+        finally
+        {
+            _isLoggingIn = false;
+        }
+    }
+}
