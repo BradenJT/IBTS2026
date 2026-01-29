@@ -1,8 +1,6 @@
 @page "/login"
-@using IBTS2026.Web.Models
-@using IBTS2026.Web.Services.ApiClients
+@using IBTS2026.Web.Models.Auth
 @using IBTS2026.Web.Services.Auth
-@inject ILookupApiClient LookupApi
 @inject IAuthService AuthService
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
@@ -12,42 +10,43 @@
 <div class="login-container">
     <div class="login-card">
         <h2>Login to IBTS</h2>
-        <p class="login-subtitle">Select a user to log in as (development mode)</p>
+        <p class="login-subtitle">Enter your credentials to sign in</p>
 
-        @if (_isLoading)
-        {
-            <div class="loading-spinner">Loading users...</div>
-        }
-        else if (_errorMessage != null)
+        @if (_errorMessage != null)
         {
             <div class="error-message">@_errorMessage</div>
         }
-        else
-        {
+
+        <EditForm Model="_model" OnValidSubmit="HandleLoginAsync" FormName="LoginForm">
+            <DataAnnotationsValidator />
+
             <div class="form-group">
-                <label for="userSelect">Select User</label>
-                <select id="userSelect" class="form-control" @bind="_selectedUserId">
-                    <option value="0">-- Select a user --</option>
-                    @foreach (var user in _users)
-                    {
-                        <option value="@user.UserId">@user.FirstName @user.LastName (@user.Email)</option>
-                    }
-                </select>
+                <label for="email">Email</label>
+                <InputText id="email" class="form-control" @bind-Value="_model.Email" placeholder="your@email.com" />
+                <ValidationMessage For="@(() => _model.Email)" />
             </div>
 
-            <button class="btn btn-primary login-btn"
-                    @onclick="HandleLoginAsync"
-                    disabled="@(_selectedUserId == 0 || _isLoggingIn)">
+            <div class="form-group">
+                <label for="password">Password</label>
+                <InputText id="password" type="password" class="form-control" @bind-Value="_model.Password" placeholder="Your password" />
+                <ValidationMessage For="@(() => _model.Password)" />
+            </div>
+
+            <button type="submit" class="btn btn-primary login-btn" disabled="@_isLoggingIn">
                 @if (_isLoggingIn)
                 {
-                    <span>Logging in...</span>
+                    <span>Signing in...</span>
                 }
                 else
                 {
-                    <span>Login</span>
+                    <span>Sign In</span>
                 }
             </button>
-        }
+        </EditForm>
+
+        <div class="register-link">
+            <p>Don't have an account? <a href="/register">Create one</a></p>
+        </div>
     </div>
 </div>
 
@@ -95,6 +94,7 @@
         border: 1px solid #ced4da;
         border-radius: 4px;
         font-size: 1rem;
+        box-sizing: border-box;
     }
 
     .form-control:focus {
@@ -112,6 +112,7 @@
         border-radius: 4px;
         font-size: 1rem;
         cursor: pointer;
+        margin-top: 0.5rem;
     }
 
     .login-btn:hover:not(:disabled) {
@@ -123,57 +124,69 @@
         cursor: not-allowed;
     }
 
-    .loading-spinner, .error-message {
-        text-align: center;
-        padding: 1rem;
-    }
-
     .error-message {
         color: #dc3545;
         background-color: #f8d7da;
         border-radius: 4px;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .register-link {
+        margin-top: 1.5rem;
+        text-align: center;
+        color: #6c757d;
+    }
+
+    .register-link a {
+        color: #5E81AC;
+        text-decoration: none;
+    }
+
+    .register-link a:hover {
+        text-decoration: underline;
+    }
+
+    .validation-message {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
     }
 </style>
 
 @code {
-    private List<UserModel> _users = [];
-    private int _selectedUserId;
-    private bool _isLoading = true;
+    private LoginModel _model = new();
     private bool _isLoggingIn;
     private string? _errorMessage;
 
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            _users = await LookupApi.GetUsersForDropdownAsync();
-        }
-        catch (Exception ex)
-        {
-            _errorMessage = $"Failed to load users: {ex.Message}";
-        }
-        finally
-        {
-            _isLoading = false;
-        }
-    }
-
     private async Task HandleLoginAsync()
     {
-        if (_selectedUserId == 0)
+        if (string.IsNullOrWhiteSpace(_model.Email) || string.IsNullOrWhiteSpace(_model.Password))
+        {
+            _errorMessage = "Please enter both email and password.";
             return;
+        }
 
         _isLoggingIn = true;
         _errorMessage = null;
 
         try
         {
-            await AuthService.LoginAsync(_selectedUserId);
-            Navigation.NavigateTo("/incidents", forceLoad: true);
+            var (success, error) = await AuthService.LoginAsync(_model.Email, _model.Password);
+
+            if (success)
+            {
+                Navigation.NavigateTo("/incidents", forceLoad: true);
+            }
+            else
+            {
+                _errorMessage = error ?? "Invalid email or password.";
+            }
         }
         catch (Exception ex)
         {
-            _errorMessage = $"Login failed: {ex.Message}";
+            _errorMessage = $"An error occurred: {ex.Message}";
         }
         finally
         {

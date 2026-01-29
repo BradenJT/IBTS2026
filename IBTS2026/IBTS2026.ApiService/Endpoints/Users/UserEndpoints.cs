@@ -27,11 +27,14 @@ namespace IBTS2026.ApiService.Endpoints.Users
                     ? Results.NotFound()
                     : Results.Ok(result);
             })
+            .RequireAuthorization("RequireUserRole")
             .WithName("GetUser")
             .WithSummary("Get a user by ID")
             .WithDescription("Retrieves detailed information about a specific user by their unique identifier.")
             .WithTags("Users")
             .Produces<UserDetailsDto>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
@@ -58,11 +61,14 @@ namespace IBTS2026.ApiService.Endpoints.Users
 
                 return Results.Ok(result);
             })
+            .RequireAuthorization("RequireAdminRole")
             .WithName("GetUsers")
             .WithSummary("Get a paginated list of users")
-            .WithDescription("Retrieves a paginated list of users with optional search and sorting. Defaults to page 1 with 20 items per page.")
+            .WithDescription("Retrieves a paginated list of users with optional search and sorting. Defaults to page 1 with 20 items per page. Requires Admin role.")
             .WithTags("Users")
             .Produces<PagedResult<UserDto>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
             app.MapPost("/users", async (
@@ -81,11 +87,14 @@ namespace IBTS2026.ApiService.Endpoints.Users
 
                 return Results.Created($"/users/{userId}", userId);
             })
+            .RequireAuthorization("RequireAdminRole")
             .WithName("CreateUser")
             .WithSummary("Create a new user")
-            .WithDescription("Creates a new user with the provided details. Returns the ID of the created user.")
+            .WithDescription("Creates a new user with the provided details. Returns the ID of the created user. Requires Admin role.")
             .WithTags("Users")
             .Produces<int>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
@@ -107,11 +116,14 @@ namespace IBTS2026.ApiService.Endpoints.Users
 
                 return result ? Results.NoContent() : Results.NotFound();
             })
+            .RequireAuthorization("RequireUserRole")
             .WithName("UpdateUser")
             .WithSummary("Update an existing user")
             .WithDescription("Updates an existing user's details by their unique identifier. Returns 204 No Content on success or 404 Not Found if the user does not exist.")
             .WithTags("Users")
             .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -128,11 +140,14 @@ namespace IBTS2026.ApiService.Endpoints.Users
 
                 return result ? Results.NoContent() : Results.NotFound();
             })
+            .RequireAuthorization("RequireAdminRole")
             .WithName("DeleteUser")
             .WithSummary("Delete a user")
-            .WithDescription("Deletes a user by their unique identifier. Returns 204 No Content on success or 404 Not Found if the user does not exist.")
+            .WithDescription("Deletes a user by their unique identifier. Returns 204 No Content on success or 404 Not Found if the user does not exist. Requires Admin role.")
             .WithTags("Users")
             .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
         }

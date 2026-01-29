@@ -27,11 +27,14 @@ namespace IBTS2026.ApiService.Endpoints.Incidents
                     ? Results.NotFound()
                     : Results.Ok(result);
             })
+            .RequireAuthorization("RequireUserRole")
             .WithName("GetIncident")
             .WithSummary("Get an incident by ID")
             .WithDescription("Retrieves detailed information about a specific incident by its unique identifier.")
             .WithTags("Incidents")
             .Produces<IncidentDetailsDto>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
@@ -68,11 +71,14 @@ namespace IBTS2026.ApiService.Endpoints.Incidents
 
                 return Results.Ok(result);
             })
+            .RequireAuthorization("RequireUserRole")
             .WithName("GetIncidents")
             .WithSummary("Get a paginated list of incidents")
             .WithDescription("Retrieves a paginated list of incidents with optional filtering by status, priority, assignee, and date range. Supports search and sorting.")
             .WithTags("Incidents")
             .Produces<PagedResult<IncidentDto>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
             app.MapPost("/incidents", async (
@@ -93,11 +99,14 @@ namespace IBTS2026.ApiService.Endpoints.Incidents
 
                 return Results.Created($"/incidents/{incidentId}", incidentId);
             })
+            .RequireAuthorization("RequireUserRole")
             .WithName("CreateIncident")
             .WithSummary("Create a new incident")
             .WithDescription("Creates a new incident with the provided details. Returns the ID of the created incident.")
             .WithTags("Incidents")
             .Produces<int>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
@@ -121,11 +130,14 @@ namespace IBTS2026.ApiService.Endpoints.Incidents
 
                 return result ? Results.NoContent() : Results.NotFound();
             })
+            .RequireAuthorization("RequireUserRole")
             .WithName("UpdateIncident")
             .WithSummary("Update an existing incident")
             .WithDescription("Updates an existing incident's details. Status transitions are validated according to business rules.")
             .WithTags("Incidents")
             .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status409Conflict)
@@ -143,11 +155,14 @@ namespace IBTS2026.ApiService.Endpoints.Incidents
 
                 return result ? Results.NoContent() : Results.NotFound();
             })
+            .RequireAuthorization("RequireAdminRole")
             .WithName("DeleteIncident")
             .WithSummary("Delete an incident")
-            .WithDescription("Deletes an incident by its unique identifier. Returns 204 No Content on success or 404 Not Found if the incident does not exist.")
+            .WithDescription("Deletes an incident by its unique identifier. Returns 204 No Content on success or 404 Not Found if the incident does not exist. Requires Admin role.")
             .WithTags("Incidents")
             .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
         }

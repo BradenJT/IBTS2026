@@ -18,11 +18,14 @@ public static class LookupEndpoints
 
             return Results.Ok(priorities);
         })
+        .RequireAuthorization("RequireUserRole")
         .WithName("GetPriorities")
         .WithSummary("Get all priorities")
         .WithDescription("Retrieves all available priority levels for incidents.")
         .WithTags("Lookups")
-        .Produces<List<PriorityDto>>(StatusCodes.Status200OK);
+        .Produces<List<PriorityDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden);
 
         app.MapGet("/statuses", async (IBTS2026Context context, CancellationToken ct) =>
         {
@@ -34,10 +37,13 @@ public static class LookupEndpoints
 
             return Results.Ok(statuses);
         })
+        .RequireAuthorization("RequireUserRole")
         .WithName("GetStatuses")
         .WithSummary("Get all statuses")
         .WithDescription("Retrieves all available status values for incidents.")
         .WithTags("Lookups")
-        .Produces<List<StatusDto>>(StatusCodes.Status200OK);
+        .Produces<List<StatusDto>>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden);
     }
 }

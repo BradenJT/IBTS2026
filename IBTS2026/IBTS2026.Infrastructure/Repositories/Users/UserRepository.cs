@@ -11,6 +11,12 @@ namespace IBTS2026.Infrastructure.Repositories.Users
         public Task<User?> GetByIdAsync(int id, CancellationToken ct)
             => Query().FirstOrDefaultAsync(u => u.UserId == id, ct);
 
+        public Task<User?> GetByEmailAsync(string email, CancellationToken ct)
+            => Query().FirstOrDefaultAsync(u => u.Email == email, ct);
+
+        public Task<bool> AnyUsersExistAsync(CancellationToken ct)
+            => Query().AnyAsync(ct);
+
         public void Add(User user) => AddEntity(user);
 
         public void Update(User user) => UpdateEntity(user);

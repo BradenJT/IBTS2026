@@ -43,6 +43,8 @@ public static class DependencyInjection
         // Register services
         services.AddScoped<IEmailService, SmtpEmailService>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
+        services.AddSingleton<ITokenService, JwtTokenService>();
 
         // Register User query handlers
         services.AddScoped<IRequestHandler<GetUserQuery, UserDetailsDto?>, GetUserQueryHandler>();

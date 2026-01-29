@@ -15,6 +15,22 @@ public partial class IBTS2026Context
         ConfigureNotificationOutbox(modelBuilder);
         ConfigureIncidentNotes(modelBuilder);
         ConfigureIncidentUserRelationships(modelBuilder);
+        ConfigureUserAuthenticationFields(modelBuilder);
+    }
+
+    private static void ConfigureUserAuthenticationFields(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.Property(e => e.PasswordHash)
+                .IsUnicode(false);
+
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true);
+
+            entity.Property(e => e.FailedLoginCount)
+                .HasDefaultValue(0);
+        });
     }
 
     private static void ConfigureIncidentUserRelationships(ModelBuilder modelBuilder)

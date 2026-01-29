@@ -2,6 +2,7 @@ using IBTS2026.Web;
 using IBTS2026.Web.Components;
 using IBTS2026.Web.Services.ApiClients;
 using IBTS2026.Web.Services.Auth;
+using IBTS2026.Web.Services.Http;
 using Microsoft.AspNetCore.Components.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,28 +19,38 @@ builder.Services.AddOutputCache();
 // Register authentication services
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+builder.Services.AddScoped<IAuthTokenStore, AuthTokenStore>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
-// Register HTTP clients for API access
-builder.Services.AddHttpClient<IUserApiClient, UserApiClient>(client =>
+// Register the authorization message handler (transient for HttpClient factory)
+builder.Services.AddTransient<AuthorizationMessageHandler>();
+
+// Register Auth API client (no auth required for login/register)
+builder.Services.AddHttpClient<IAuthApiClient, AuthApiClient>(client =>
 {
     client.BaseAddress = new Uri("https+http://apiservice");
 });
+
+// Register HTTP clients for API access with authorization
+builder.Services.AddHttpClient<IUserApiClient, UserApiClient>(client =>
+{
+    client.BaseAddress = new Uri("https+http://apiservice");
+}).AddHttpMessageHandler<AuthorizationMessageHandler>();
 
 builder.Services.AddHttpClient<IIncidentApiClient, IncidentApiClient>(client =>
 {
     client.BaseAddress = new Uri("https+http://apiservice");
-});
+}).AddHttpMessageHandler<AuthorizationMessageHandler>();
 
 builder.Services.AddHttpClient<ILookupApiClient, LookupApiClient>(client =>
 {
     client.BaseAddress = new Uri("https+http://apiservice");
-});
+}).AddHttpMessageHandler<AuthorizationMessageHandler>();
 
 builder.Services.AddHttpClient<IIncidentNoteApiClient, IncidentNoteApiClient>(client =>
 {
     client.BaseAddress = new Uri("https+http://apiservice");
-});
+}).AddHttpMessageHandler<AuthorizationMessageHandler>();
 
 var app = builder.Build();
 
