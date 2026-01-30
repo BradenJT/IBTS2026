@@ -1,4 +1,8 @@
 using IBTS2026.Domain.Entities;
+using IBTS2026.Domain.Entities.Features.Incidents.Incident;
+using IBTS2026.Domain.Entities.Features.Incidents.IncidentNote;
+using IBTS2026.Domain.Entities.Features.Notifications.NotificationOutbox;
+using IBTS2026.Domain.Entities.Features.Users;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBTS2026.Infrastructure.Persistence;

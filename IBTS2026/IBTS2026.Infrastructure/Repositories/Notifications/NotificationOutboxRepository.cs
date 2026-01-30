@@ -1,4 +1,4 @@
-using IBTS2026.Domain.Entities;
+using IBTS2026.Domain.Entities.Features.Notifications.NotificationOutbox;
 using IBTS2026.Domain.Interfaces.Notifications;
 using IBTS2026.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;

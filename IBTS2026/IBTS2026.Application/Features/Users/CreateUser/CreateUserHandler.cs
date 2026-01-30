@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using IBTS2026.Application.Abstractions.Persistence;
 using IBTS2026.Application.Abstractions.Requests;
-using IBTS2026.Domain.Entities;
+using IBTS2026.Domain.Entities.Features.Users;
 using IBTS2026.Domain.Interfaces.Users;
 
 namespace IBTS2026.Application.Features.Users.CreateUser

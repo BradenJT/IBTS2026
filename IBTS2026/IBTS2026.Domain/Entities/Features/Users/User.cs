@@ -1,10 +1,22 @@
 ﻿#nullable enable
 
-namespace IBTS2026.Domain.Entities;
+using IBTS2026;
 
-public partial class User
+namespace IBTS2026.Domain.Entities.Features.Users;
+
+public class User
 {
-    // Authentication properties (added via partial class)
+    public int UserId { get; set; }
+
+    public string Email { get; set; }
+
+    public string FirstName { get; set; }
+
+    public string LastName { get; set; }
+
+    public int RoleId { get; set; }
+
+    public DateTime? CreatedAt { get; set; }
     public string? PasswordHash { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime? LockoutEnd { get; set; }
@@ -15,14 +27,14 @@ public partial class User
         string email,
         string firstName,
         string lastName,
-        string role)
+        int roleId)
     {
         return new User
         {
             Email = email,
             FirstName = firstName,
             LastName = lastName,
-            Role = role,
+            RoleId = roleId,
             IsActive = true,
             FailedLoginCount = 0,
             CreatedAt = DateTime.UtcNow
@@ -33,7 +45,7 @@ public partial class User
         string email,
         string firstName,
         string lastName,
-        string role,
+        int roleId,
         string passwordHash)
     {
         return new User
@@ -41,7 +53,7 @@ public partial class User
             Email = email,
             FirstName = firstName,
             LastName = lastName,
-            Role = role,
+            RoleId = roleId,
             PasswordHash = passwordHash,
             IsActive = true,
             FailedLoginCount = 0,
@@ -64,9 +76,9 @@ public partial class User
         Email = email;
     }
 
-    public void ChangeRole(string role)
+    public void ChangeRole(int roleId)
     {
-        Role = role;
+        RoleId = roleId;
     }
 
     public void SetPassword(string passwordHash)

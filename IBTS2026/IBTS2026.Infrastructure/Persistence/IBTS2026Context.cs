@@ -3,6 +3,8 @@
 using System;
 using System.Collections.Generic;
 using IBTS2026.Domain.Entities;
+using IBTS2026.Domain.Entities.Features.Incidents.Incident;
+using IBTS2026.Domain.Entities.Features.Users;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBTS2026.Infrastructure.Persistence;

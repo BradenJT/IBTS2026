@@ -1,4 +1,4 @@
-using IBTS2026.Domain.Entities;
+using IBTS2026.Domain.Entities.Features.Incidents.IncidentNote;
 using IBTS2026.Domain.Interfaces.IncidentNotes;
 using IBTS2026.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;

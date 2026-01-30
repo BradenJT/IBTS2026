@@ -1,5 +1,7 @@
 using IBTS2026.Application.Abstractions.Services;
-using IBTS2026.Domain.Entities;
+using IBTS2026.Domain.Entities.Features.Incidents.Incident;
+using IBTS2026.Domain.Entities.Features.Notifications.NotificationOutbox;
+using IBTS2026.Domain.Entities.Features.Users;
 using IBTS2026.Domain.Interfaces.Notifications;
 using Microsoft.Extensions.Configuration;
 

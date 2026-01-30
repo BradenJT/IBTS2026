@@ -1,12 +1,32 @@
 ﻿#nullable enable
 
+using IBTS2026;
+using IBTS2026.Domain.Entities.Features.Users;
 using IBTS2026.Domain.Enums;
 
-namespace IBTS2026.Domain.Entities;
+namespace IBTS2026.Domain.Entities.Features.Incidents.Incident;
 
-public partial class Incident
+public class Incident
 {
-    // Navigation properties not in the generated file
+    public int IncidentId { get; set; }
+
+    public string Title { get; set; }
+
+    public string Description { get; set; }
+
+    public int StatusId { get; set; }
+
+    public int PriorityId { get; set; }
+
+    public int CreatedBy { get; set; }
+
+    public int? AssignedTo { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+
+    public virtual Priority Priority { get; set; }
+
+    public virtual Status Status { get; set; }
     public virtual User? CreatedByUser { get; set; }
     public virtual User? AssignedToUser { get; set; }
 
