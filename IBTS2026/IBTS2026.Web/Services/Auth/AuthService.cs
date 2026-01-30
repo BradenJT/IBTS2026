@@ -51,7 +51,8 @@ public class AuthService : IAuthService
 
     public async Task<UserModel?> GetCurrentUserAsync()
     {
-        var authState = (_authStateProvider as CustomAuthStateProvider)?.GetCurrentAuthenticationState();
+        // Must use async method to load state from ProtectedLocalStorage after page reload
+        var authState = await _authStateProvider.GetAuthenticationStateAsync();
         if (authState?.User?.Identity?.IsAuthenticated != true)
             return null;
 

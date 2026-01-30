@@ -3,7 +3,7 @@
 @using IBTS2026.Web.Services.ApiClients
 @inject IIncidentApiClient IncidentApi
 @inject NavigationManager Navigation
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <PageTitle>Incidents</PageTitle>
 

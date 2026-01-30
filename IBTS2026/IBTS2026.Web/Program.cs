@@ -4,6 +4,7 @@ using IBTS2026.Web.Services.ApiClients;
 using IBTS2026.Web.Services.Auth;
 using IBTS2026.Web.Services.Http;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Server.Circuits;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,11 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddOutputCache();
+
+// Register circuit token cache (singleton for cross-scope token access)
+builder.Services.AddSingleton<ICircuitTokenCache, CircuitTokenCache>();
+builder.Services.AddScoped<CircuitIdProvider>();
+builder.Services.AddScoped<CircuitHandler, TokenCircuitHandler>();
 
 // Register authentication services
 builder.Services.AddCascadingAuthenticationState();

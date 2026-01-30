@@ -1,10 +1,12 @@
 @page "/incidents/create"
 @using IBTS2026.Web.Models
 @using IBTS2026.Web.Services.ApiClients
+@using IBTS2026.Web.Services.Auth
 @inject IIncidentApiClient IncidentApi
 @inject ILookupApiClient LookupApi
+@inject IAuthService AuthService
 @inject NavigationManager Navigation
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <PageTitle>Create Incident</PageTitle>
 
@@ -68,7 +70,7 @@
                             <option value="0">-- Select User --</option>
                             @foreach (var user in users)
                             {
-                                <option value="@user.UserId">@user.FirstName @user.LastName</option>
+                                <option value="@user.UserId">@user.FullName</option>
                             }
                         </InputSelect>
                         <ValidationMessage For="() => incident.CreatedByUserId" class="text-danger" />
@@ -80,7 +82,7 @@
                             <option value="">-- Unassigned --</option>
                             @foreach (var user in users)
                             {
-                                <option value="@user.UserId">@user.FirstName @user.LastName</option>
+                                <option value="@user.UserId">@user.FullName</option>
                             }
                         </InputSelect>
                     </div>
@@ -115,7 +117,7 @@
 
     private List<PriorityModel> priorities = [];
     private List<StatusModel> statuses = [];
-    private List<UserModel> users = [];
+    private List<UserLookupModel> users = [];
 
     private bool isLoading = true;
     private bool isSubmitting = false;
@@ -125,6 +127,7 @@
     {
         try
         {
+            // Load lookup data first
             var prioritiesTask = LookupApi.GetPrioritiesAsync();
             var statusesTask = LookupApi.GetStatusesAsync();
             var usersTask = LookupApi.GetUsersForDropdownAsync();
@@ -134,6 +137,13 @@
             priorities = await prioritiesTask;
             statuses = await statusesTask;
             users = await usersTask;
+
+            // Auto-select current user as CreatedBy
+            var currentUser = await AuthService.GetCurrentUserAsync();
+            if (currentUser is not null)
+            {
+                incident.CreatedByUserId = currentUser.UserId;
+            }
         }
         catch (Exception ex)
         {

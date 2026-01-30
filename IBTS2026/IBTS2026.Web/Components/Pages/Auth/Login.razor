@@ -3,7 +3,7 @@
 @using IBTS2026.Web.Services.Auth
 @inject IAuthService AuthService
 @inject NavigationManager Navigation
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <PageTitle>Login - IBTS</PageTitle>
 

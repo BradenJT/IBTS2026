@@ -7,7 +7,7 @@
 @inject ILookupApiClient LookupApi
 @inject IAuthService AuthService
 @inject NavigationManager Navigation
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <PageTitle>Incident Details</PageTitle>
 
@@ -80,7 +80,7 @@ else if (_incident is not null)
                         <option value="">Unassigned</option>
                         @foreach (var user in _users)
                         {
-                            <option value="@user.UserId">@user.FirstName @user.LastName</option>
+                            <option value="@user.UserId">@user.FullName</option>
                         }
                     </select>
                 </div>
@@ -170,7 +170,7 @@ else if (_incident is not null)
     // Lookup data
     private List<StatusModel> _statuses = [];
     private List<PriorityModel> _priorities = [];
-    private List<UserModel> _users = [];
+    private List<UserLookupModel> _users = [];
 
     // Notes
     private List<IncidentNoteModel> _notes = [];

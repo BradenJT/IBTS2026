@@ -1,4 +1,4 @@
-﻿using IBTS2026.Api.Contracts.Users;
+using IBTS2026.Api.Contracts.Users;
 using IBTS2026.Application.Abstractions.Requests;
 using IBTS2026.Application.Dtos.Users;
 using IBTS2026.Application.Features.Users.CreateUser;
@@ -7,6 +7,8 @@ using IBTS2026.Application.Features.Users.GetUsers;
 using IBTS2026.Application.Features.Users.RemoveUser;
 using IBTS2026.Application.Features.Users.UpdateUser;
 using IBTS2026.Application.Models.Requests;
+using IBTS2026.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBTS2026.ApiService.Endpoints.Users
 {
@@ -150,6 +152,32 @@ namespace IBTS2026.ApiService.Endpoints.Users
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
+
+            // Lookup endpoint for dropdown/selection purposes - accessible to all authenticated users
+            app.MapGet("/users/lookup", async (
+                IBTS2026Context context,
+                CancellationToken ct) =>
+            {
+                var users = await context.Users
+                    .AsNoTracking()
+                    .Where(u => u.IsActive)
+                    .OrderBy(u => u.FirstName)
+                    .ThenBy(u => u.LastName)
+                    .Select(u => new UserLookupDto(
+                        u.UserId,
+                        $"{u.FirstName} {u.LastName}"))
+                    .ToListAsync(ct);
+
+                return Results.Ok(users);
+            })
+            .RequireAuthorization("RequireUserRole")
+            .WithName("GetUsersLookup")
+            .WithSummary("Get users for dropdown selection")
+            .WithDescription("Retrieves a simplified list of active users for dropdown/selection purposes. Returns user ID and full name only.")
+            .WithTags("Users")
+            .Produces<List<UserLookupDto>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
         }
     }
 }
