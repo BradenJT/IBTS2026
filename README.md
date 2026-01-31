@@ -42,7 +42,7 @@ A modern incident management system built with .NET Aspire, Blazor Server, and E
 ## Development SMTP
 
 For email testing, install Papercut SMTP:
-- Download from GitHub releases
+- Download from GitHub releases https://github.com/ChangemakerStudios/Papercut-SMTP
 - Runs on port 2525 (configured in appsettings)
 - Web UI at http://localhost:8080
 
