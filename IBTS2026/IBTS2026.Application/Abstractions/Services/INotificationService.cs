@@ -1,4 +1,5 @@
-using IBTS2026.Domain.Entities;
+using IBTS2026.Domain.Entities.Features.Incidents.Incident;
+using IBTS2026.Domain.Entities.Features.Users;
 
 namespace IBTS2026.Application.Abstractions.Services;
 
@@ -8,4 +9,5 @@ public interface INotificationService
     void QueueStatusChangeNotification(Incident incident, string oldStatus, string newStatus, User changedByUser);
     void QueuePriorityChangeNotification(Incident incident, string oldPriority, string newPriority, User changedByUser);
     void QueueNoteAddedNotification(Incident incident, User noteAuthor, User incidentCreator);
+    void QueueInvitationNotification(string recipientEmail, string inviterFirstName, string inviterLastName, string role, string invitationToken, DateTime expiresAt);
 }

@@ -36,6 +36,7 @@ public static class DependencyInjection
 
         // Register repositories
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IUserInvitationRepository, UserInvitationRepository>();
         services.AddScoped<IIncidentRepository, IncidentRepository>();
         services.AddScoped<IIncidentNoteRepository, IncidentNoteRepository>();
         services.AddScoped<INotificationOutboxRepository, NotificationOutboxRepository>();
@@ -43,6 +44,8 @@ public static class DependencyInjection
         // Register services
         services.AddScoped<IEmailService, SmtpEmailService>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
+        services.AddSingleton<ITokenService, JwtTokenService>();
 
         // Register User query handlers
         services.AddScoped<IRequestHandler<GetUserQuery, UserDetailsDto?>, GetUserQueryHandler>();

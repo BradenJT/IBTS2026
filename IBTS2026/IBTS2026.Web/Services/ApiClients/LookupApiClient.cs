@@ -19,9 +19,9 @@ public class LookupApiClient(HttpClient httpClient) : ILookupApiClient
         return result ?? [];
     }
 
-    public async Task<List<UserModel>> GetUsersForDropdownAsync(CancellationToken ct = default)
+    public async Task<List<UserLookupModel>> GetUsersForDropdownAsync(CancellationToken ct = default)
     {
-        var result = await _httpClient.GetFromJsonAsync<PagedResultModel<UserModel>>("/users?pageSize=100", ct);
-        return result?.Items.ToList() ?? [];
+        var result = await _httpClient.GetFromJsonAsync<List<UserLookupModel>>("/users/lookup", ct);
+        return result ?? [];
     }
 }

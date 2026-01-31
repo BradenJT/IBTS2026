@@ -1,4 +1,6 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@rendermode InteractiveServer
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">IBTS2026</a>
     </div>
@@ -35,6 +37,16 @@
                     </NavLink>
                 </div>
             </NotAuthorized>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="Admin">
+            <Authorized Context="adminContext">
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="admin/invitations">
+                        <i class="fa-solid fa-envelope nav-icon" aria-hidden="true"></i> Invitations
+                    </NavLink>
+                </div>
+            </Authorized>
         </AuthorizeView>
     </nav>
 </div>

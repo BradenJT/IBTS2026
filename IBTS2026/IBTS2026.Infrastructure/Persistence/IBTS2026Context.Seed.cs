@@ -1,4 +1,8 @@
 using IBTS2026.Domain.Entities;
+using IBTS2026.Domain.Entities.Features.Incidents.Incident;
+using IBTS2026.Domain.Entities.Features.Incidents.IncidentNote;
+using IBTS2026.Domain.Entities.Features.Notifications.NotificationOutbox;
+using IBTS2026.Domain.Entities.Features.Users;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBTS2026.Infrastructure.Persistence;
@@ -15,6 +19,22 @@ public partial class IBTS2026Context
         ConfigureNotificationOutbox(modelBuilder);
         ConfigureIncidentNotes(modelBuilder);
         ConfigureIncidentUserRelationships(modelBuilder);
+        ConfigureUserAuthenticationFields(modelBuilder);
+    }
+
+    private static void ConfigureUserAuthenticationFields(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.Property(e => e.PasswordHash)
+                .IsUnicode(false);
+
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true);
+
+            entity.Property(e => e.FailedLoginCount)
+                .HasDefaultValue(0);
+        });
     }
 
     private static void ConfigureIncidentUserRelationships(ModelBuilder modelBuilder)

@@ -3,6 +3,8 @@
 using System;
 using System.Collections.Generic;
 using IBTS2026.Domain.Entities;
+using IBTS2026.Domain.Entities.Features.Incidents.Incident;
+using IBTS2026.Domain.Entities.Features.Users;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBTS2026.Infrastructure.Persistence;
@@ -23,6 +25,8 @@ public partial class IBTS2026Context : DbContext
     public virtual DbSet<Status> Statuses { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
+
+    public virtual DbSet<UserInvitation> UserInvitations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -139,6 +143,36 @@ public partial class IBTS2026Context : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.Role)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.SecurityStamp)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasDefaultValueSql("NEWID()");
+        });
+
+        modelBuilder.Entity<UserInvitation>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.ToTable("UserInvitation");
+
+            entity.HasIndex(e => e.Token, "IX_UserInvitation_Token").IsUnique();
+
+            entity.HasIndex(e => e.Email, "IX_UserInvitation_Email");
+
+            entity.Property(e => e.Email)
+                .IsRequired()
+                .HasMaxLength(250)
+                .IsUnicode(false);
+
+            entity.Property(e => e.Token)
+                .IsRequired()
+                .HasMaxLength(64)
+                .IsUnicode(false);
+
+            entity.Property(e => e.Role)
+                .IsRequired()
                 .HasMaxLength(50)
                 .IsUnicode(false);
         });

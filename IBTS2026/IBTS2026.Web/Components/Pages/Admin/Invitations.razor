@@ -1,0 +1,435 @@
+@page "/admin/invitations"
+@using IBTS2026.Web.Services.ApiClients
+@using IBTS2026.Web.Services.Auth
+@using Microsoft.AspNetCore.Authorization
+@inject IInvitationApiClient InvitationApi
+@inject IAuthService AuthService
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<PageTitle>Manage Invitations - IBTS</PageTitle>
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <div class="invitations-container">
+    <div class="page-header">
+        <h1>User Invitations</h1>
+        <button class="btn btn-primary" @onclick="ShowInviteModal">
+            + Invite New User
+        </button>
+    </div>
+
+    @if (_errorMessage != null)
+    {
+        <div class="alert alert-error">@_errorMessage</div>
+    }
+
+    @if (_successMessage != null)
+    {
+        <div class="alert alert-success">@_successMessage</div>
+    }
+
+    @if (_isLoading)
+    {
+        <div class="loading">Loading invitations...</div>
+    }
+    else if (_invitations.Count == 0)
+    {
+        <div class="empty-state">
+            <p>No invitations found.</p>
+            <p>Click "Invite New User" to send an invitation.</p>
+        </div>
+    }
+    else
+    {
+        <div class="invitations-table-wrapper">
+            <table class="invitations-table">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Invited By</th>
+                        <th>Created</th>
+                        <th>Expires</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var invitation in _invitations)
+                    {
+                        <tr class="@GetRowClass(invitation)">
+                            <td>@invitation.Email</td>
+                            <td>
+                                <span class="role-badge @invitation.Role.ToLower()">@invitation.Role</span>
+                            </td>
+                            <td>
+                                <span class="status-badge @GetStatusClass(invitation)">
+                                    @GetStatusText(invitation)
+                                </span>
+                            </td>
+                            <td>@invitation.InvitedByName</td>
+                            <td>@invitation.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            <td>
+                                @if (invitation.IsUsed)
+                                {
+                                    <span class="text-muted">N/A</span>
+                                }
+                                else
+                                {
+                                    @invitation.ExpiresAt.ToString("MMM dd, yyyy HH:mm")
+                                }
+                            </td>
+                            <td>
+                                @if (!invitation.IsUsed)
+                                {
+                                    <button class="btn btn-sm btn-secondary"
+                                            @onclick="() => ResendInvitation(invitation.Id)"
+                                            disabled="@_isProcessing">
+                                        Resend
+                                    </button>
+                                    <button class="btn btn-sm btn-danger"
+                                            @onclick="() => CancelInvitation(invitation.Id)"
+                                            disabled="@_isProcessing">
+                                        Cancel
+                                    </button>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@if (_showInviteModal)
+{
+    <div class="modal-overlay" @onclick="CloseInviteModal">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2>Invite New User</h2>
+                <button class="modal-close" @onclick="CloseInviteModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                @if (_modalError != null)
+                {
+                    <div class="alert alert-error">@_modalError</div>
+                }
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" class="form-control"
+                           @bind="_inviteEmail" placeholder="user@example.com" />
+                </div>
+
+                <div class="form-group">
+                    <label for="role">Role</label>
+                    <select id="role" class="form-control" @bind="_inviteRole">
+                        <option value="User">User</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="CloseInviteModal">Cancel</button>
+                <button class="btn btn-primary" @onclick="SendInvitation" disabled="@_isSending">
+                    @if (_isSending)
+                    {
+                        <span>Sending...</span>
+                    }
+                    else
+                    {
+                        <span>Send Invitation</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+    </Authorized>
+    <NotAuthorized>
+        <div class="unauthorized-message">
+            <h2>Access Denied</h2>
+            <p>You do not have permission to access this page. Admin role is required.</p>
+            <a href="/" class="btn btn-primary">Return to Home</a>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+<style>
+    .unauthorized-message {
+        text-align: center;
+        padding: 3rem;
+        max-width: 600px;
+        margin: 2rem auto;
+    }
+
+    .unauthorized-message h2 {
+        color: #dc3545;
+        margin-bottom: 1rem;
+    }
+
+    .unauthorized-message p {
+        color: #6c757d;
+        margin-bottom: 1.5rem;
+    }
+    .invitations-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        margin: 0;
+        color: #3B4252;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: background-color 0.2s;
+    }
+
+    .btn-primary {
+        background-color: #5E81AC;
+        color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background-color: #4C6C8A;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+        background-color: #5a6268;
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+        background-color: #c82333;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        margin-right: 0.25rem;
+    }
+
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .alert {
+        padding: 0.75rem 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+    }
+
+    .alert-error {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .loading, .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+
+    .invitations-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .invitations-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .invitations-table th,
+    .invitations-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .invitations-table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        color: #434C5E;
+    }
+
+    .invitations-table tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .invitations-table tr.used {
+        opacity: 0.6;
+    }
+
+    .invitations-table tr.expired {
+        background-color: #fff3cd;
+    }
+
+    .role-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .role-badge.admin {
+        background-color: #e2e3f3;
+        color: #5E81AC;
+    }
+
+    .role-badge.user {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-badge.pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .status-badge.used {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .status-badge.expired {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .text-muted {
+        color: #6c757d;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 8px;
+        width: 100%;
+        max-width: 500px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        color: #3B4252;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #6c757d;
+    }
+
+    .modal-close:hover {
+        color: #343a40;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        padding: 1rem 1.5rem;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #434C5E;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 1rem;
+        box-sizing: border-box;
+    }
+
+    .form-control:focus {
+        border-color: #5E81AC;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(94, 129, 172, 0.25);
+    }
+</style>

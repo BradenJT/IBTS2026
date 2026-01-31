@@ -13,13 +13,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
 	  <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Contracts\Incidents\" />
-    <Folder Include="Endpoints\Incidents\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="nlog.config" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,5 @@
 using FluentAssertions;
-using IBTS2026.Domain.Entities;
+using IBTS2026.Domain.Entities.Features.Incidents.Incident;
 using IBTS2026.Domain.Enums;
 
 namespace IBTS2026.Tests.Domain;

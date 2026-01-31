@@ -6,5 +6,5 @@ public interface ILookupApiClient
 {
     Task<List<PriorityModel>> GetPrioritiesAsync(CancellationToken ct = default);
     Task<List<StatusModel>> GetStatusesAsync(CancellationToken ct = default);
-    Task<List<UserModel>> GetUsersForDropdownAsync(CancellationToken ct = default);
+    Task<List<UserLookupModel>> GetUsersForDropdownAsync(CancellationToken ct = default);
 }

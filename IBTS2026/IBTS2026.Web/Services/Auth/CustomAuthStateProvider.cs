@@ -1,19 +1,30 @@
 using System.Security.Claims;
 using IBTS2026.Web.Models;
+using IBTS2026.Web.Services.ApiClients;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.Extensions.Logging;
 
 namespace IBTS2026.Web.Services.Auth;
 
 public class CustomAuthStateProvider : AuthenticationStateProvider
 {
     private readonly ProtectedLocalStorage _localStorage;
+    private readonly IAuthApiClient _authApiClient;
+    private readonly ILogger<CustomAuthStateProvider> _logger;
     private AuthenticationState _currentState;
     private const string UserStorageKey = "ibts_user";
+    private DateTime _lastValidation = DateTime.MinValue;
+    private static readonly TimeSpan ValidationInterval = TimeSpan.FromMinutes(5);
 
-    public CustomAuthStateProvider(ProtectedLocalStorage localStorage)
+    public CustomAuthStateProvider(
+        ProtectedLocalStorage localStorage,
+        IAuthApiClient authApiClient,
+        ILogger<CustomAuthStateProvider> logger)
     {
         _localStorage = localStorage;
+        _authApiClient = authApiClient;
+        _logger = logger;
         _currentState = new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
     }
 
@@ -24,6 +35,18 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
             var result = await _localStorage.GetAsync<StoredUser>(UserStorageKey);
             if (result.Success && result.Value != null)
             {
+                // Periodically validate the security stamp
+                if (ShouldValidateSecurityStamp())
+                {
+                    var isValid = await ValidateSecurityStampAsync(result.Value);
+                    if (!isValid)
+                    {
+                        _logger.LogWarning("Security stamp validation failed for user {UserId}, logging out", result.Value.UserId);
+                        await LogoutAsync();
+                        return _currentState;
+                    }
+                }
+
                 var claims = CreateClaims(result.Value);
                 var identity = new ClaimsIdentity(claims, "custom");
                 _currentState = new AuthenticationState(new ClaimsPrincipal(identity));
@@ -42,6 +65,61 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
         return _currentState;
     }
 
+    private bool ShouldValidateSecurityStamp()
+    {
+        return DateTime.UtcNow - _lastValidation > ValidationInterval;
+    }
+
+    private async Task<bool> ValidateSecurityStampAsync(StoredUser user)
+    {
+        if (string.IsNullOrEmpty(user.SecurityStamp))
+        {
+            // No security stamp stored - legacy session, force re-login
+            _logger.LogInformation("No security stamp found for user {UserId}, requiring re-login", user.UserId);
+            return false;
+        }
+
+        try
+        {
+            _lastValidation = DateTime.UtcNow;
+            return await _authApiClient.ValidateSecurityStampAsync(user.UserId, user.SecurityStamp);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to validate security stamp for user {UserId}, allowing session to continue", user.UserId);
+            // On network errors, allow the session to continue
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Forces immediate validation of the security stamp, regardless of the validation interval.
+    /// Returns true if valid, false if invalid (user will be logged out).
+    /// </summary>
+    public async Task<bool> ForceValidateSecurityStampAsync()
+    {
+        try
+        {
+            var result = await _localStorage.GetAsync<StoredUser>(UserStorageKey);
+            if (!result.Success || result.Value == null)
+            {
+                return false;
+            }
+
+            _lastValidation = DateTime.MinValue; // Reset to force validation
+            var isValid = await ValidateSecurityStampAsync(result.Value);
+            if (!isValid)
+            {
+                await LogoutAsync();
+            }
+            return isValid;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public AuthenticationState? GetCurrentAuthenticationState() => _currentState;
 
     public async Task LoginAsync(UserModel user)
@@ -52,7 +130,8 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
             Email = user.Email,
             FirstName = user.FirstName,
             LastName = user.LastName,
-            Role = user.Role
+            Role = user.Role,
+            SecurityStamp = user.SecurityStamp ?? string.Empty
         };
 
         await _localStorage.SetAsync(UserStorageKey, storedUser);
@@ -92,5 +171,6 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
+        public string SecurityStamp { get; set; } = string.Empty;
     }
 }

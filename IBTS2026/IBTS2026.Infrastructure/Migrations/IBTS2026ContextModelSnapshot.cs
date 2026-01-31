@@ -90,7 +90,7 @@ namespace IBTS2026.Infrastructure.Migrations
                             }));
                 });
 
-            modelBuilder.Entity("IBTS2026.Domain.Entities.Incident", b =>
+            modelBuilder.Entity("IBTS2026.Domain.Entities.Features.Incidents.Incident.Incident", b =>
                 {
                     b.Property<int>("IncidentId")
                         .ValueGeneratedOnAdd()
@@ -108,6 +108,7 @@ namespace IBTS2026.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .IsUnicode(false)
                         .HasColumnType("varchar(max)");
 
@@ -158,7 +159,7 @@ namespace IBTS2026.Infrastructure.Migrations
                             }));
                 });
 
-            modelBuilder.Entity("IBTS2026.Domain.Entities.IncidentNote", b =>
+            modelBuilder.Entity("IBTS2026.Domain.Entities.Features.Incidents.IncidentNote.IncidentNote", b =>
                 {
                     b.Property<int>("IncidentNoteId")
                         .ValueGeneratedOnAdd()
@@ -191,7 +192,7 @@ namespace IBTS2026.Infrastructure.Migrations
                     b.ToTable("IncidentNote", (string)null);
                 });
 
-            modelBuilder.Entity("IBTS2026.Domain.Entities.NotificationOutbox", b =>
+            modelBuilder.Entity("IBTS2026.Domain.Entities.Features.Notifications.NotificationOutbox.NotificationOutbox", b =>
                 {
                     b.Property<int>("NotificationOutboxId")
                         .ValueGeneratedOnAdd()
@@ -244,6 +245,131 @@ namespace IBTS2026.Infrastructure.Migrations
                     b.HasIndex(new[] { "ProcessedAt" }, "IX_NotificationOutbox_ProcessedAt");
 
                     b.ToTable("NotificationOutbox", (string)null);
+                });
+
+            modelBuilder.Entity("IBTS2026.Domain.Entities.Features.Users.User", b =>
+                {
+                    b.Property<int>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(250)");
+
+                    b.Property<int>("FailedLoginCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime?>("LockoutEnd")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PasswordHash")
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(max)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("SecurityStamp")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)")
+                        .HasDefaultValueSql("NEWID()");
+
+                    b.HasKey("UserId")
+                        .HasName("PK__User__1788CC4C5590D3EE");
+
+                    b.HasIndex(new[] { "Email" }, "IX_User_Email")
+                        .IsUnique();
+
+                    b.HasIndex(new[] { "Role" }, "IX_User_Role");
+
+                    b.ToTable("User", (string)null);
+                });
+
+            modelBuilder.Entity("IBTS2026.Domain.Entities.Features.Users.UserInvitation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(250)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("InvitedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "Email" }, "IX_UserInvitation_Email");
+
+                    b.HasIndex(new[] { "Token" }, "IX_UserInvitation_Token")
+                        .IsUnique();
+
+                    b.ToTable("UserInvitation", (string)null);
                 });
 
             modelBuilder.Entity("IBTS2026.Domain.Entities.Priority", b =>
@@ -336,57 +462,14 @@ namespace IBTS2026.Infrastructure.Migrations
                         });
                 });
 
-            modelBuilder.Entity("IBTS2026.Domain.Entities.User", b =>
+            modelBuilder.Entity("IBTS2026.Domain.Entities.Features.Incidents.Incident.Incident", b =>
                 {
-                    b.Property<int>("UserId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(250)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(250)");
-
-                    b.Property<string>("FirstName")
-                        .HasMaxLength(50)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<string>("LastName")
-                        .HasMaxLength(50)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<string>("Role")
-                        .HasMaxLength(50)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
-
-                    b.HasKey("UserId")
-                        .HasName("PK__User__1788CC4C5590D3EE");
-
-                    b.HasIndex(new[] { "Email" }, "IX_User_Email")
-                        .IsUnique()
-                        .HasFilter("[Email] IS NOT NULL");
-
-                    b.HasIndex(new[] { "Role" }, "IX_User_Role");
-
-                    b.ToTable("User", (string)null);
-                });
-
-            modelBuilder.Entity("IBTS2026.Domain.Entities.Incident", b =>
-                {
-                    b.HasOne("IBTS2026.Domain.Entities.User", "AssignedToUser")
+                    b.HasOne("IBTS2026.Domain.Entities.Features.Users.User", "AssignedToUser")
                         .WithMany()
                         .HasForeignKey("AssignedTo")
                         .HasConstraintName("FK_Incident_AssignedToUser");
 
-                    b.HasOne("IBTS2026.Domain.Entities.User", "CreatedByUser")
+                    b.HasOne("IBTS2026.Domain.Entities.Features.Users.User", "CreatedByUser")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .IsRequired()
@@ -413,15 +496,15 @@ namespace IBTS2026.Infrastructure.Migrations
                     b.Navigation("Status");
                 });
 
-            modelBuilder.Entity("IBTS2026.Domain.Entities.IncidentNote", b =>
+            modelBuilder.Entity("IBTS2026.Domain.Entities.Features.Incidents.IncidentNote.IncidentNote", b =>
                 {
-                    b.HasOne("IBTS2026.Domain.Entities.User", "CreatedByUser")
+                    b.HasOne("IBTS2026.Domain.Entities.Features.Users.User", "CreatedByUser")
                         .WithMany()
                         .HasForeignKey("CreatedByUserId")
                         .IsRequired()
                         .HasConstraintName("FK_IncidentNote_User");
 
-                    b.HasOne("IBTS2026.Domain.Entities.Incident", "Incident")
+                    b.HasOne("IBTS2026.Domain.Entities.Features.Incidents.Incident.Incident", "Incident")
                         .WithMany()
                         .HasForeignKey("IncidentId")
                         .OnDelete(DeleteBehavior.Cascade)

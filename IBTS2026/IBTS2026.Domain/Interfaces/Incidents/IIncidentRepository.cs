@@ -1,4 +1,4 @@
-﻿using IBTS2026.Domain.Entities;
+﻿using IBTS2026.Domain.Entities.Features.Incidents.Incident;
 
 namespace IBTS2026.Domain.Interfaces.Incidents
 {

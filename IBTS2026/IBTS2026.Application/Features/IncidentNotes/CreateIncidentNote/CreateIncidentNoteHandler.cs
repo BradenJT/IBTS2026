@@ -2,7 +2,7 @@ using FluentValidation;
 using IBTS2026.Application.Abstractions.Persistence;
 using IBTS2026.Application.Abstractions.Requests;
 using IBTS2026.Application.Abstractions.Services;
-using IBTS2026.Domain.Entities;
+using IBTS2026.Domain.Entities.Features.Incidents.IncidentNote;
 using IBTS2026.Domain.Interfaces.IncidentNotes;
 using IBTS2026.Domain.Interfaces.Incidents;
 using IBTS2026.Domain.Interfaces.Users;

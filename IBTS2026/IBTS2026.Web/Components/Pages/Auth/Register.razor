@@ -1,0 +1,233 @@
+@page "/register"
+@using IBTS2026.Web.Models.Auth
+@using IBTS2026.Web.Services.Auth
+@using Microsoft.AspNetCore.WebUtilities
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<PageTitle>Register - IBTS</PageTitle>
+
+<div class="register-container">
+    <div class="register-card">
+        @if (_isFirstUser)
+        {
+            <h2>Welcome! Create Admin Account</h2>
+            <p class="register-subtitle">You are the first user. Your account will be created with Admin privileges.</p>
+        }
+        else if (_hasValidToken)
+        {
+            <h2>Complete Your Registration</h2>
+            <p class="register-subtitle">You've been invited to join. Fill in the details below.</p>
+        }
+        else
+        {
+            <h2>Registration Required</h2>
+            <p class="register-subtitle">This system is invite-only. Please contact an administrator for an invitation.</p>
+        }
+
+        @if (_successMessage != null)
+        {
+            <div class="success-message">@_successMessage</div>
+        }
+
+        @if (_errorMessage != null)
+        {
+            <div class="error-message">@_errorMessage</div>
+        }
+
+        @if (_isFirstUser || _hasValidToken)
+        {
+            <EditForm Model="_model" OnValidSubmit="HandleRegisterAsync" FormName="RegisterForm">
+                <DataAnnotationsValidator />
+
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label for="firstName">First Name</label>
+                        <InputText id="firstName" class="form-control" @bind-Value="_model.FirstName" placeholder="John" />
+                        <ValidationMessage For="@(() => _model.FirstName)" />
+                    </div>
+
+                    <div class="form-group half">
+                        <label for="lastName">Last Name</label>
+                        <InputText id="lastName" class="form-control" @bind-Value="_model.LastName" placeholder="Doe" />
+                        <ValidationMessage For="@(() => _model.LastName)" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <InputText id="email" class="form-control" @bind-Value="_model.Email" placeholder="your@email.com" disabled="@(!string.IsNullOrEmpty(_invitedEmail))" />
+                    <ValidationMessage For="@(() => _model.Email)" />
+                    @if (!string.IsNullOrEmpty(_invitedEmail))
+                    {
+                        <small class="form-text">This email was set by your invitation and cannot be changed.</small>
+                    }
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <InputText id="password" type="password" class="form-control" @bind-Value="_model.Password" placeholder="Min 8 characters" />
+                    <ValidationMessage For="@(() => _model.Password)" />
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <InputText id="confirmPassword" type="password" class="form-control" @bind-Value="_model.ConfirmPassword" placeholder="Confirm your password" />
+                    <ValidationMessage For="@(() => _model.ConfirmPassword)" />
+                </div>
+
+                <button type="submit" class="btn btn-primary register-btn" disabled="@_isRegistering">
+                    @if (_isRegistering)
+                    {
+                        <span>Creating account...</span>
+                    }
+                    else
+                    {
+                        <span>Create Account</span>
+                    }
+                </button>
+            </EditForm>
+        }
+
+        <div class="login-link">
+            <p>Already have an account? <a href="/login">Sign in</a></p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .register-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+        padding: 2rem 0;
+    }
+
+    .register-card {
+        background: #fff;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        max-width: 500px;
+        width: 100%;
+    }
+
+    .register-card h2 {
+        margin-bottom: 0.5rem;
+        color: #3B4252;
+    }
+
+    .register-subtitle {
+        color: #6c757d;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-group.half {
+        flex: 1;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #434C5E;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 1rem;
+        box-sizing: border-box;
+    }
+
+    .form-control:focus {
+        border-color: #5E81AC;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(94, 129, 172, 0.25);
+    }
+
+    .form-control:disabled {
+        background-color: #e9ecef;
+        cursor: not-allowed;
+    }
+
+    .form-text {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+
+    .register-btn {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: #5E81AC;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 0.5rem;
+    }
+
+    .register-btn:hover:not(:disabled) {
+        background-color: #4C6C8A;
+    }
+
+    .register-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .error-message {
+        color: #dc3545;
+        background-color: #f8d7da;
+        border-radius: 4px;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .success-message {
+        color: #155724;
+        background-color: #d4edda;
+        border-radius: 4px;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .login-link {
+        margin-top: 1.5rem;
+        text-align: center;
+        color: #6c757d;
+    }
+
+    .login-link a {
+        color: #5E81AC;
+        text-decoration: none;
+    }
+
+    .login-link a:hover {
+        text-decoration: underline;
+    }
+
+    .validation-message {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+</style>

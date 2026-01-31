@@ -3,7 +3,8 @@
 @using IBTS2026.Web.Services.ApiClients
 @inject IIncidentApiClient IncidentApi
 @inject NavigationManager Navigation
-@rendermode InteractiveServer
+@inject ILogger<IncidentList> Logger
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <PageTitle>Incidents</PageTitle>
 
@@ -120,11 +121,13 @@ else if (incidents is not null)
 
     protected override async Task OnInitializedAsync()
     {
+        Logger.LogInformation("IncidentList: OnInitializedAsync called");
         await LoadIncidents();
     }
 
     private async Task LoadIncidents()
     {
+        Logger.LogInformation("IncidentList: LoadIncidents starting");
         try
         {
             isLoading = true;
@@ -133,15 +136,19 @@ else if (incidents is not null)
             int? statusId = string.IsNullOrEmpty(statusFilter) ? null : int.Parse(statusFilter);
             int? priorityId = string.IsNullOrEmpty(priorityFilter) ? null : int.Parse(priorityFilter);
 
+            Logger.LogInformation("IncidentList: Calling IncidentApi.GetIncidentsAsync");
             incidents = await IncidentApi.GetIncidentsAsync(
                 currentPage,
                 PageSize,
                 string.IsNullOrWhiteSpace(searchTerm) ? null : searchTerm,
                 statusId: statusId,
                 priorityId: priorityId);
+            Logger.LogInformation("IncidentList: GetIncidentsAsync completed successfully with {Count} items",
+                incidents?.Items?.Count ?? 0);
         }
         catch (Exception ex)
         {
+            Logger.LogError(ex, "IncidentList: Error loading incidents");
             errorMessage = $"Error loading incidents: {ex.Message}";
         }
         finally

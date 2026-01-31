@@ -80,7 +80,19 @@ namespace IBTS2026.Web.Services.ApiClients
                     queryParams.Add($"createdBefore={createdBefore.Value:O}");
 
                 var url = $"/incidents?{string.Join("&", queryParams)}";
-                var result = await _httpClient.GetFromJsonAsync<PagedResultModel<IncidentModel>>(url, ct);
+                _logger.LogInformation("IncidentApiClient: Making request to {Url}", url);
+
+                var response = await _httpClient.GetAsync(url, ct);
+                _logger.LogInformation("IncidentApiClient: Response status: {StatusCode}", response.StatusCode);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync(ct);
+                    _logger.LogWarning("IncidentApiClient: Error response: {Content}", content);
+                }
+
+                response.EnsureSuccessStatusCode();
+                var result = await response.Content.ReadFromJsonAsync<PagedResultModel<IncidentModel>>(ct);
 
                 return result ?? new PagedResultModel<IncidentModel>([], 0, pageNumber, pageSize);
             }
