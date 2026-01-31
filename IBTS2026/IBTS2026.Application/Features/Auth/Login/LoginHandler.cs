@@ -28,25 +28,25 @@ public sealed class LoginHandler(
         if (!validationResult.IsValid)
         {
             var errors = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
-            return new LoginResult(false, null, null, null, null, null, null, errors);
+            return new LoginResult(false, null, null, null, null, null, null, null, errors);
         }
 
         var user = await _users.GetByEmailAsync(command.Email, ct);
         if (user is null)
         {
-            return new LoginResult(false, null, null, null, null, null, null, "Invalid email or password.");
+            return new LoginResult(false, null, null, null, null, null, null, null, "Invalid email or password.");
         }
 
         // Check if account is active
         if (!user.IsActive)
         {
-            return new LoginResult(false, null, null, null, null, null, null, "Account is disabled.");
+            return new LoginResult(false, null, null, null, null, null, null, null, "Account is disabled.");
         }
 
         // Check if account is locked out
         if (user.IsLockedOut)
         {
-            return new LoginResult(false, null, null, null, null, null, null, "Account is locked. Please try again later.");
+            return new LoginResult(false, null, null, null, null, null, null, null, "Account is locked. Please try again later.");
         }
 
         // Verify password
@@ -59,10 +59,10 @@ public sealed class LoginHandler(
 
             if (user.IsLockedOut)
             {
-                return new LoginResult(false, null, null, null, null, null, null, "Account is locked due to too many failed attempts. Please try again in 15 minutes.");
+                return new LoginResult(false, null, null, null, null, null, null, null, "Account is locked due to too many failed attempts. Please try again in 15 minutes.");
             }
 
-            return new LoginResult(false, null, null, null, null, null, null, "Invalid email or password.");
+            return new LoginResult(false, null, null, null, null, null, null, null, "Invalid email or password.");
         }
 
         // Successful login
@@ -74,8 +74,8 @@ public sealed class LoginHandler(
             "LOGIN DEBUG: User {UserId} ({Email}) logging in with Role: '{Role}'",
             user.UserId, user.Email, user.Role ?? "(null)");
 
-        // Generate JWT token
-        var token = _tokenService.GenerateToken(user.UserId, user.Email!, user.Role!);
+        // Generate JWT token with security stamp
+        var token = _tokenService.GenerateToken(user.UserId, user.Email!, user.Role!, user.SecurityStamp);
 
         _logger.LogInformation(
             "LOGIN DEBUG: Generated token for user {UserId}, token length: {TokenLength}",
@@ -89,6 +89,7 @@ public sealed class LoginHandler(
             user.LastName,
             user.Role,
             token,
+            user.SecurityStamp,
             null);
     }
 }

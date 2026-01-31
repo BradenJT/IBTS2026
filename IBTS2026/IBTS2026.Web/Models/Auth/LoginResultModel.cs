@@ -6,5 +6,6 @@ public sealed record LoginResultModel(
     string FirstName,
     string LastName,
     string Role,
-    string Token
+    string Token,
+    string SecurityStamp
 );

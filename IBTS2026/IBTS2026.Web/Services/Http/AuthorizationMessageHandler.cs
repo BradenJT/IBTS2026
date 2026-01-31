@@ -29,28 +29,44 @@ public sealed class AuthorizationMessageHandler : DelegatingHandler
     {
         string? token = null;
 
-        // First try to get token from the circuit cache (works across scopes)
+        // First try to get token from the circuit cache by CircuitId
         var circuitId = _circuitIdProvider.CircuitId;
         _logger.LogDebug("AuthorizationMessageHandler: CircuitId = {CircuitId}", circuitId ?? "(null)");
 
         if (!string.IsNullOrEmpty(circuitId))
         {
             token = _circuitTokenCache.GetToken(circuitId);
-            _logger.LogDebug("AuthorizationMessageHandler: Token from circuit cache = {HasToken}", !string.IsNullOrEmpty(token));
+            if (!string.IsNullOrEmpty(token))
+            {
+                _logger.LogDebug("AuthorizationMessageHandler: Token from circuit cache (by CircuitId)");
+            }
         }
 
-        // Fall back to the token store if circuit cache doesn't have it
+        // Fallback: Try to get the current token (when CircuitId is not available, e.g., in HttpClient handler scope)
+        if (string.IsNullOrEmpty(token))
+        {
+            token = _circuitTokenCache.GetCurrentToken();
+            if (!string.IsNullOrEmpty(token))
+            {
+                _logger.LogDebug("AuthorizationMessageHandler: Token from circuit cache (fallback/current)");
+            }
+        }
+
+        // Last resort: Try the token store (may fail during prerendering)
         if (string.IsNullOrEmpty(token))
         {
             token = await _tokenStore.GetTokenAsync();
-            _logger.LogDebug("AuthorizationMessageHandler: Token from token store = {HasToken}", !string.IsNullOrEmpty(token));
+            if (!string.IsNullOrEmpty(token))
+            {
+                _logger.LogDebug("AuthorizationMessageHandler: Token from token store");
+            }
         }
 
         if (!string.IsNullOrEmpty(token))
         {
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            _logger.LogInformation("AuthorizationMessageHandler: Added Bearer token to request {Method} {Uri} (token length: {Length})",
-                request.Method, request.RequestUri, token.Length);
+            _logger.LogDebug("AuthorizationMessageHandler: Added Bearer token to request {Method} {Uri}",
+                request.Method, request.RequestUri);
         }
         else
         {

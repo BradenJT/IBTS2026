@@ -12,6 +12,12 @@ public interface ICircuitTokenCache
     string? GetToken(string circuitId);
 
     /// <summary>
+    /// Gets the most recently set token (fallback when CircuitId is not available).
+    /// This is used by HttpClient handlers that run in separate scopes.
+    /// </summary>
+    string? GetCurrentToken();
+
+    /// <summary>
     /// Sets the token for the specified circuit.
     /// </summary>
     void SetToken(string circuitId, string token);
@@ -20,6 +26,11 @@ public interface ICircuitTokenCache
     /// Clears the token for the specified circuit.
     /// </summary>
     void ClearToken(string circuitId);
+
+    /// <summary>
+    /// Clears the current/fallback token.
+    /// </summary>
+    void ClearCurrentToken();
 
     /// <summary>
     /// Removes all tokens associated with a circuit (cleanup on disconnect).

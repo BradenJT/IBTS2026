@@ -1,0 +1,22 @@
+@rendermode InteractiveServer
+@using IBTS2026.Web.Services.Auth
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+
+<AuthorizeView>
+    <Authorized>
+        <span class="user-info">@context.User.Identity?.Name</span>
+        <a href="javascript:void(0)" @onclick="HandleLogoutAsync" class="logout-link">Logout</a>
+    </Authorized>
+    <NotAuthorized>
+        <a href="/login">Login</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private async Task HandleLogoutAsync()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/login", forceLoad: true);
+    }
+}

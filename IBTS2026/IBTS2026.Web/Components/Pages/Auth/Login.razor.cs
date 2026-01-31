@@ -25,7 +25,9 @@ namespace IBTS2026.Web.Components.Pages.Auth
 
                 if (success)
                 {
-                    Navigation.NavigateTo("/incidents", forceLoad: true);
+                    // Don't use forceLoad: true - it destroys the circuit before token is persisted
+                    // This keeps the circuit alive and the token in memory
+                    Navigation.NavigateTo("/incidents");
                 }
                 else
                 {

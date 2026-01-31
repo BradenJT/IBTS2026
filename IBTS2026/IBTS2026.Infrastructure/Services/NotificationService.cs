@@ -134,4 +134,63 @@ internal sealed class NotificationService : INotificationService
             _outboxRepository.Add(notification);
         }
     }
+
+    public void QueueInvitationNotification(string recipientEmail, string inviterFirstName, string inviterLastName, string role, string invitationToken, DateTime expiresAt)
+    {
+        var registrationUrl = $"{_baseUrl}/register?token={invitationToken}";
+        var subject = "You've been invited to join IBTS2026";
+        var body = $@"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset=""utf-8"">
+                <title>IBTS2026 Invitation</title>
+            </head>
+            <body style=""font-family: Arial, sans-serif; line-height: 1.6; color: #333;"">
+                <div style=""max-width: 600px; margin: 0 auto; padding: 20px;"">
+                    <h1 style=""color: #2c3e50;"">You've Been Invited!</h1>
+
+                    <p>Hello,</p>
+
+                    <p><strong>{inviterFirstName} {inviterLastName}</strong> has invited you to join IBTS2026 as a <strong>{role}</strong>.</p>
+
+                    <p>Click the button below to complete your registration:</p>
+
+                    <div style=""text-align: center; margin: 30px 0;"">
+                        <a href=""{registrationUrl}""
+                           style=""background-color: #3498db; color: white; padding: 12px 24px;
+                                  text-decoration: none; border-radius: 5px; display: inline-block;"">
+                            Accept Invitation
+                        </a>
+                    </div>
+
+                    <p style=""color: #7f8c8d; font-size: 14px;"">
+                        This invitation will expire on <strong>{expiresAt:MMMM dd, yyyy 'at' h:mm tt} UTC</strong>.
+                    </p>
+
+                    <p style=""color: #7f8c8d; font-size: 14px;"">
+                        If you didn't expect this invitation or believe it was sent in error,
+                        you can safely ignore this email.
+                    </p>
+
+                    <hr style=""border: none; border-top: 1px solid #eee; margin: 30px 0;"">
+
+                    <p style=""color: #95a5a6; font-size: 12px;"">
+                        If the button doesn't work, copy and paste this link into your browser:<br>
+                        <a href=""{registrationUrl}"" style=""color: #3498db;"">{registrationUrl}</a>
+                    </p>
+                </div>
+            </body>
+            </html>
+        ";
+
+        var notification = NotificationOutbox.Create(
+            "Invitation",
+            recipientEmail,
+            subject,
+            body,
+            relatedIncidentId: null);
+
+        _outboxRepository.Add(notification);
+    }
 }

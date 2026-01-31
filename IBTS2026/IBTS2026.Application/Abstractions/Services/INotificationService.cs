@@ -9,4 +9,5 @@ public interface INotificationService
     void QueueStatusChangeNotification(Incident incident, string oldStatus, string newStatus, User changedByUser);
     void QueuePriorityChangeNotification(Incident incident, string oldPriority, string newPriority, User changedByUser);
     void QueueNoteAddedNotification(Incident incident, User noteAuthor, User incidentCreator);
+    void QueueInvitationNotification(string recipientEmail, string inviterFirstName, string inviterLastName, string role, string invitationToken, DateTime expiresAt);
 }

@@ -16,7 +16,7 @@ public sealed class InviteUserHandlerTests
     private Mock<IUserRepository> _userRepositoryMock = null!;
     private Mock<IUserInvitationRepository> _invitationRepositoryMock = null!;
     private Mock<IUnitOfWork> _unitOfWorkMock = null!;
-    private Mock<IEmailService> _emailServiceMock = null!;
+    private Mock<INotificationService> _notificationServiceMock = null!;
     private Mock<IValidator<InviteUserCommand>> _validatorMock = null!;
     private InviteUserHandler _handler = null!;
 
@@ -26,22 +26,17 @@ public sealed class InviteUserHandlerTests
         _userRepositoryMock = new Mock<IUserRepository>();
         _invitationRepositoryMock = new Mock<IUserInvitationRepository>();
         _unitOfWorkMock = new Mock<IUnitOfWork>();
-        _emailServiceMock = new Mock<IEmailService>();
+        _notificationServiceMock = new Mock<INotificationService>();
         _validatorMock = new Mock<IValidator<InviteUserCommand>>();
 
         _validatorMock.Setup(v => v.ValidateAsync(It.IsAny<InviteUserCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
 
-        _emailServiceMock.Setup(e => e.SendInvitationEmailAsync(
-            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
-            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-
         _handler = new InviteUserHandler(
             _userRepositoryMock.Object,
             _invitationRepositoryMock.Object,
             _unitOfWorkMock.Object,
-            _emailServiceMock.Object,
+            _notificationServiceMock.Object,
             _validatorMock.Object);
     }
 
@@ -72,9 +67,9 @@ public sealed class InviteUserHandlerTests
 
         _invitationRepositoryMock.Verify(r => r.Add(It.IsAny<UserInvitation>()), Times.Once);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _emailServiceMock.Verify(e => e.SendInvitationEmailAsync(
+        _notificationServiceMock.Verify(n => n.QueueInvitationNotification(
             "newuser@test.com", It.IsAny<string>(), It.IsAny<string>(),
-            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime>()), Times.Once);
     }
 
     [TestMethod]

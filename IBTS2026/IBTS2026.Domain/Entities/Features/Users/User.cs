@@ -21,6 +21,12 @@ public class User
     public int FailedLoginCount { get; set; }
     public DateTime? LastLoginAt { get; set; }
 
+    /// <summary>
+    /// A random value that changes whenever security-sensitive user properties change
+    /// (password, role, email, deactivation). Used to invalidate existing tokens.
+    /// </summary>
+    public string SecurityStamp { get; set; } = Guid.NewGuid().ToString();
+
     public static User Create(
         string email,
         string firstName,
@@ -35,7 +41,8 @@ public class User
             Role = role,
             IsActive = true,
             FailedLoginCount = 0,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            SecurityStamp = Guid.NewGuid().ToString()
         };
     }
 
@@ -55,7 +62,8 @@ public class User
             PasswordHash = passwordHash,
             IsActive = true,
             FailedLoginCount = 0,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            SecurityStamp = Guid.NewGuid().ToString()
         };
     }
 
@@ -72,16 +80,27 @@ public class User
     public void ChangeEmail(string email)
     {
         Email = email;
+        RegenerateSecurityStamp();
     }
 
     public void ChangeRole(string role)
     {
         Role = role;
+        RegenerateSecurityStamp();
     }
 
     public void SetPassword(string passwordHash)
     {
         PasswordHash = passwordHash;
+        RegenerateSecurityStamp();
+    }
+
+    /// <summary>
+    /// Regenerates the security stamp, invalidating all existing tokens for this user.
+    /// </summary>
+    public void RegenerateSecurityStamp()
+    {
+        SecurityStamp = Guid.NewGuid().ToString();
     }
 
     public void RecordLoginFailure()
@@ -116,6 +135,7 @@ public class User
     public void Deactivate()
     {
         IsActive = false;
+        RegenerateSecurityStamp();
     }
 
     public void Activate()

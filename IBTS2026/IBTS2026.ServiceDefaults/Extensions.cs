@@ -4,6 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.ServiceDiscovery;
+using NLog;
+using NLog.Extensions.Logging;
+using NLog.Web;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -128,5 +131,38 @@ public static class Extensions
         }
 
         return app;
+    }
+
+    /// <summary>
+    /// Configures NLog as the logging provider for the application.
+    /// Expects an nlog.config file in the application root directory.
+    /// </summary>
+    public static TBuilder ConfigureNLog<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
+    {
+        // Clear existing logging providers and use NLog
+        builder.Logging.ClearProviders();
+        builder.Logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
+
+        // Add NLog as the logging provider
+        // NLog will automatically load nlog.config from the application directory
+        builder.Services.AddLogging(loggingBuilder =>
+        {
+            loggingBuilder.AddNLog(new NLogProviderOptions
+            {
+                CaptureMessageTemplates = true,
+                CaptureMessageProperties = true
+            });
+        });
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Shuts down NLog when the application stops.
+    /// Call this in a finally block or after app.Run().
+    /// </summary>
+    public static void ShutdownNLog()
+    {
+        LogManager.Shutdown();
     }
 }

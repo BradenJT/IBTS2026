@@ -35,7 +35,7 @@ public sealed class LoginHandlerTests
         _validatorMock.Setup(v => v.ValidateAsync(It.IsAny<LoginCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
 
-        _tokenServiceMock.Setup(t => t.GenerateToken(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()))
+        _tokenServiceMock.Setup(t => t.GenerateToken(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
             .Returns("test_jwt_token");
 
         _handler = new LoginHandler(
@@ -70,7 +70,7 @@ public sealed class LoginHandlerTests
         result.Email.Should().Be("test@test.com");
         result.Role.Should().Be("User");
 
-        _tokenServiceMock.Verify(t => t.GenerateToken(1, "test@test.com", "User"), Times.Once);
+        _tokenServiceMock.Verify(t => t.GenerateToken(1, "test@test.com", "User", It.IsAny<string>()), Times.Once);
         _userRepositoryMock.Verify(r => r.Update(user), Times.Once);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }

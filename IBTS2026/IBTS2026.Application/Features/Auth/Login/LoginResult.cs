@@ -8,5 +8,6 @@ public sealed record LoginResult(
     string? LastName,
     string? Role,
     string? Token,
+    string? SecurityStamp,
     string? ErrorMessage
 );

@@ -4,6 +4,6 @@ namespace IBTS2026.Application.Abstractions.Services;
 
 public interface ITokenService
 {
-    string GenerateToken(int userId, string email, string role);
+    string GenerateToken(int userId, string email, string role, string securityStamp);
     ClaimsPrincipal? ValidateToken(string token);
 }

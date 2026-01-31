@@ -90,7 +90,8 @@ public class AuthService : IAuthService
                     result.Email,
                     result.FirstName,
                     result.LastName,
-                    result.Role
+                    result.Role,
+                    SecurityStamp: result.SecurityStamp
                 );
                 await customProvider.LoginAsync(user);
             }

@@ -2,14 +2,15 @@
 @using IBTS2026.Web.Services.ApiClients
 @using IBTS2026.Web.Services.Auth
 @using Microsoft.AspNetCore.Authorization
-@attribute [Authorize(Roles = "Admin")]
 @inject IInvitationApiClient InvitationApi
 @inject IAuthService AuthService
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <PageTitle>Manage Invitations - IBTS</PageTitle>
 
-<div class="invitations-container">
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <div class="invitations-container">
     <div class="page-header">
         <h1>User Invitations</h1>
         <button class="btn btn-primary" @onclick="ShowInviteModal">
@@ -149,8 +150,33 @@
         </div>
     </div>
 }
+    </Authorized>
+    <NotAuthorized>
+        <div class="unauthorized-message">
+            <h2>Access Denied</h2>
+            <p>You do not have permission to access this page. Admin role is required.</p>
+            <a href="/" class="btn btn-primary">Return to Home</a>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
 
 <style>
+    .unauthorized-message {
+        text-align: center;
+        padding: 3rem;
+        max-width: 600px;
+        margin: 2rem auto;
+    }
+
+    .unauthorized-message h2 {
+        color: #dc3545;
+        margin-bottom: 1rem;
+    }
+
+    .unauthorized-message p {
+        color: #6c757d;
+        margin-bottom: 1.5rem;
+    }
     .invitations-container {
         max-width: 1200px;
         margin: 0 auto;

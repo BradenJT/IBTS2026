@@ -11,13 +11,13 @@ public sealed class InviteUserHandler(
     IUserRepository users,
     IUserInvitationRepository invitations,
     IUnitOfWork unitOfWork,
-    IEmailService emailService,
+    INotificationService notificationService,
     IValidator<InviteUserCommand> validator) : IRequestHandler<InviteUserCommand, InviteUserResult>
 {
     private readonly IUserRepository _users = users ?? throw new ArgumentNullException(nameof(users));
     private readonly IUserInvitationRepository _invitations = invitations ?? throw new ArgumentNullException(nameof(invitations));
     private readonly IUnitOfWork _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
-    private readonly IEmailService _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+    private readonly INotificationService _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
     private readonly IValidator<InviteUserCommand> _validator = validator ?? throw new ArgumentNullException(nameof(validator));
 
     public async Task<InviteUserResult> Handle(InviteUserCommand command, CancellationToken ct)
@@ -64,17 +64,17 @@ public sealed class InviteUserHandler(
             expirationDays: 7);
 
         _invitations.Add(invitation);
-        await _unitOfWork.SaveChangesAsync(ct);
 
-        // Send invitation email (using the IEmailService which knows the base URL)
-        await _emailService.SendInvitationEmailAsync(
+        // Queue invitation email notification (goes through the outbox pattern)
+        _notificationService.QueueInvitationNotification(
             command.Email,
             invitingUser.FirstName,
             invitingUser.LastName,
             command.Role,
             invitation.Token,
-            invitation.ExpiresAt,
-            ct);
+            invitation.ExpiresAt);
+
+        await _unitOfWork.SaveChangesAsync(ct);
 
         return new InviteUserResult(
             true,

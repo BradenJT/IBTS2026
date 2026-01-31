@@ -114,5 +114,27 @@ internal sealed class AuthApiClient : IAuthApiClient
         }
     }
 
+    public async Task<bool> ValidateSecurityStampAsync(int userId, string securityStamp, CancellationToken ct = default)
+    {
+        try
+        {
+            var request = new { UserId = userId, SecurityStamp = securityStamp };
+            var response = await _httpClient.PostAsJsonAsync("/auth/validate-security-stamp", request, ct);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<SecurityStampValidationResult>(ct);
+                return result?.IsValid ?? false;
+            }
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error validating security stamp for user {UserId}", userId);
+            return false;
+        }
+    }
+
     private record FirstUserCheckResult(bool IsFirstUser);
+    private record SecurityStampValidationResult(bool IsValid);
 }

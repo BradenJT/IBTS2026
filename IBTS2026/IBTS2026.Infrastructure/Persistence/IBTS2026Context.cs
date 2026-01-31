@@ -145,6 +145,10 @@ public partial class IBTS2026Context : DbContext
             entity.Property(e => e.Role)
                 .HasMaxLength(50)
                 .IsUnicode(false);
+            entity.Property(e => e.SecurityStamp)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasDefaultValueSql("NEWID()");
         });
 
         modelBuilder.Entity<UserInvitation>(entity =>

@@ -6,7 +6,8 @@ namespace IBTS2026.Web.Models
         string FirstName,
         string LastName,
         string Role,
-        DateTime? CreatedAt = null);
+        DateTime? CreatedAt = null,
+        string? SecurityStamp = null);
 
     /// <summary>
     /// Simplified user model for dropdown/lookup purposes.

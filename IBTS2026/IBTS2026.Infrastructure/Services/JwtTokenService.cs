@@ -19,7 +19,9 @@ internal sealed class JwtTokenService : ITokenService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public string GenerateToken(int userId, string email, string role)
+    public const string SecurityStampClaimType = "security_stamp";
+
+    public string GenerateToken(int userId, string email, string role, string securityStamp)
     {
         _logger.LogInformation(
             "JWT DEBUG: GenerateToken called for UserId={UserId}, Email={Email}, Role='{Role}'",
@@ -43,7 +45,8 @@ internal sealed class JwtTokenService : ITokenService
             new Claim(ClaimTypes.Role, role),
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(SecurityStampClaimType, securityStamp)
         };
 
         _logger.LogInformation("JWT DEBUG: Claims being added to token:");

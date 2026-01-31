@@ -1,7 +1,4 @@
 ﻿@inherits LayoutComponentBase
-@using IBTS2026.Web.Services.Auth
-@inject IAuthService AuthService
-@inject NavigationManager Navigation
 
 <div class="page">
     <div class="sidebar">
@@ -10,15 +7,7 @@
 
     <main>
         <div class="top-row px-4">
-            <AuthorizeView>
-                <Authorized>
-                    <span class="user-info">@context.User.Identity?.Name</span>
-                    <a href="javascript:void(0)" @onclick="HandleLogoutAsync" class="logout-link">Logout</a>
-                </Authorized>
-                <NotAuthorized>
-                    <a href="/login">Login</a>
-                </NotAuthorized>
-            </AuthorizeView>
+            <AuthDisplay />
             <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
         </div>
 
@@ -51,11 +40,3 @@
         color: #4C6C8A;
     }
 </style>
-
-@code {
-    private async Task HandleLogoutAsync()
-    {
-        await AuthService.LogoutAsync();
-        Navigation.NavigateTo("/login", forceLoad: true);
-    }
-}

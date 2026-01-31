@@ -20,7 +20,10 @@
 
   <ItemGroup>
     <Folder Include="Contracts\Incidents\" />
-    <Folder Include="Endpoints\Incidents\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="nlog.config" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
