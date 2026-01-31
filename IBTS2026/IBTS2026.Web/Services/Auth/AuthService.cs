@@ -107,11 +107,12 @@ public class AuthService : IAuthService
         string email,
         string password,
         string firstName,
-        string lastName)
+        string lastName,
+        string? invitationToken = null)
     {
         try
         {
-            var result = await _authApiClient.RegisterAsync(email, password, firstName, lastName);
+            var result = await _authApiClient.RegisterAsync(email, password, firstName, lastName, invitationToken);
             if (result == null)
             {
                 return (false, "Registration failed. Email may already be in use.");
@@ -122,6 +123,30 @@ public class AuthService : IAuthService
         catch (Exception ex)
         {
             return (false, $"Registration failed: {ex.Message}");
+        }
+    }
+
+    public async Task<bool> IsFirstUserAsync()
+    {
+        try
+        {
+            return await _authApiClient.IsFirstUserAsync();
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public async Task<InvitationInfoModel?> ValidateInvitationTokenAsync(string token)
+    {
+        try
+        {
+            return await _authApiClient.ValidateInvitationTokenAsync(token);
+        }
+        catch
+        {
+            return null;
         }
     }
 

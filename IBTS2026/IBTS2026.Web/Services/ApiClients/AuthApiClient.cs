@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using IBTS2026.Web.Models.Auth;
+using IBTS2026.Web.Services.Auth;
 
 namespace IBTS2026.Web.Services.ApiClients;
 
@@ -43,6 +44,7 @@ internal sealed class AuthApiClient : IAuthApiClient
         string password,
         string firstName,
         string lastName,
+        string? invitationToken = null,
         CancellationToken ct = default)
     {
         try
@@ -52,7 +54,8 @@ internal sealed class AuthApiClient : IAuthApiClient
                 Email = email,
                 Password = password,
                 FirstName = firstName,
-                LastName = lastName
+                LastName = lastName,
+                InvitationToken = invitationToken
             };
 
             var response = await _httpClient.PostAsJsonAsync("/auth/register", request, ct);
@@ -73,4 +76,43 @@ internal sealed class AuthApiClient : IAuthApiClient
             throw;
         }
     }
+
+    public async Task<bool> IsFirstUserAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync("/auth/check-first-user", ct);
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<FirstUserCheckResult>(ct);
+                return result?.IsFirstUser ?? false;
+            }
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking first user status");
+            return false;
+        }
+    }
+
+    public async Task<InvitationInfoModel?> ValidateInvitationTokenAsync(string token, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"/auth/validate-invitation?token={Uri.EscapeDataString(token)}", ct);
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<InvitationInfoModel>(ct);
+            }
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error validating invitation token");
+            return null;
+        }
+    }
+
+    private record FirstUserCheckResult(bool IsFirstUser);
 }

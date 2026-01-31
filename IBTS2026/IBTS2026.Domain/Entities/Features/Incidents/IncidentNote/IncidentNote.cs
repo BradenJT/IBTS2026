@@ -1,11 +1,6 @@
 #nullable enable
 
-using IBTS2026;
-
-
-#nullable enable
-
-using IBTS2026.Domain.Entities.Features.Incidents.Incident;
+using IncidentEntity = IBTS2026.Domain.Entities.Features.Incidents.Incident.Incident;
 using IBTS2026.Domain.Entities.Features.Users;
 
 namespace IBTS2026.Domain.Entities.Features.Incidents.IncidentNote;
@@ -19,7 +14,7 @@ public class IncidentNote
     public DateTime CreatedAt { get; set; }
 
     // Navigation properties
-    public virtual Incident Incident { get; set; } = null!;
+    public virtual IncidentEntity Incident { get; set; } = null!;
     public virtual User CreatedByUser { get; set; } = null!;
 
     public static IncidentNote Create(

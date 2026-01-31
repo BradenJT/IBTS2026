@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using IBTS2026.ApiService.Endpoints.Auth;
 using IBTS2026.ApiService.Endpoints.IncidentNotes;
@@ -11,6 +12,9 @@ using IBTS2026.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+
+// Disable automatic claim type mapping so JWT claims are preserved as-is
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,7 +50,9 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.Zero,
+        RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role",
+        NameClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/nameidentifier"
     };
 });
 
@@ -81,6 +87,9 @@ app.UseExceptionHandler();
 // Add authentication and authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Add auth logging middleware for debugging (after auth so claims are populated)
+app.UseAuthLogging();
 
 if (app.Environment.IsDevelopment())
 {

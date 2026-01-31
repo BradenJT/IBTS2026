@@ -1,5 +1,6 @@
 using FluentValidation;
 using IBTS2026.Application.Abstractions.Requests;
+using IBTS2026.Application.Features.Auth.InviteUser;
 using IBTS2026.Application.Features.Auth.Login;
 using IBTS2026.Application.Features.Auth.RegisterUser;
 using IBTS2026.Application.Features.Incidents.CreateIncident;
@@ -23,6 +24,7 @@ public static class DependencyInjection
         // Register Auth command handlers
         services.AddScoped<IRequestHandler<RegisterUserCommand, RegisterUserResult>, RegisterUserHandler>();
         services.AddScoped<IRequestHandler<LoginCommand, LoginResult>, LoginHandler>();
+        services.AddScoped<IRequestHandler<InviteUserCommand, InviteUserResult>, InviteUserHandler>();
 
         // Register User command handlers
         services.AddScoped<IRequestHandler<CreateUserCommand, int>, CreateUserHandler>();

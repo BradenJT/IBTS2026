@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using IBTS2026.Application.Abstractions.Services;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace IBTS2026.Infrastructure.Services;
@@ -10,14 +11,20 @@ namespace IBTS2026.Infrastructure.Services;
 internal sealed class JwtTokenService : ITokenService
 {
     private readonly IConfiguration _configuration;
+    private readonly ILogger<JwtTokenService> _logger;
 
-    public JwtTokenService(IConfiguration configuration)
+    public JwtTokenService(IConfiguration configuration, ILogger<JwtTokenService> logger)
     {
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public string GenerateToken(int userId, string email, string role)
     {
+        _logger.LogInformation(
+            "JWT DEBUG: GenerateToken called for UserId={UserId}, Email={Email}, Role='{Role}'",
+            userId, email, role);
+
         var key = _configuration["Jwt:Key"]
             ?? throw new InvalidOperationException("JWT Key is not configured");
         var issuer = _configuration["Jwt:Issuer"] ?? "IBTS2026";
@@ -39,6 +46,12 @@ internal sealed class JwtTokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
+        _logger.LogInformation("JWT DEBUG: Claims being added to token:");
+        foreach (var claim in claims)
+        {
+            _logger.LogInformation("JWT DEBUG:   Type={ClaimType}, Value={ClaimValue}", claim.Type, claim.Value);
+        }
+
         var token = new JwtSecurityToken(
             issuer: issuer,
             audience: audience,
@@ -47,7 +60,10 @@ internal sealed class JwtTokenService : ITokenService
             signingCredentials: credentials
         );
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+        _logger.LogInformation("JWT DEBUG: Token generated, length={Length}", tokenString.Length);
+
+        return tokenString;
     }
 
     public ClaimsPrincipal? ValidateToken(string token)

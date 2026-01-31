@@ -1,6 +1,7 @@
 @page "/register"
 @using IBTS2026.Web.Models.Auth
 @using IBTS2026.Web.Services.Auth
+@using Microsoft.AspNetCore.WebUtilities
 @inject IAuthService AuthService
 @inject NavigationManager Navigation
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
@@ -9,8 +10,21 @@
 
 <div class="register-container">
     <div class="register-card">
-        <h2>Create Account</h2>
-        <p class="register-subtitle">Fill in the details below to register</p>
+        @if (_isFirstUser)
+        {
+            <h2>Welcome! Create Admin Account</h2>
+            <p class="register-subtitle">You are the first user. Your account will be created with Admin privileges.</p>
+        }
+        else if (_hasValidToken)
+        {
+            <h2>Complete Your Registration</h2>
+            <p class="register-subtitle">You've been invited to join. Fill in the details below.</p>
+        }
+        else
+        {
+            <h2>Registration Required</h2>
+            <p class="register-subtitle">This system is invite-only. Please contact an administrator for an invitation.</p>
+        }
 
         @if (_successMessage != null)
         {
@@ -22,52 +36,59 @@
             <div class="error-message">@_errorMessage</div>
         }
 
-        <EditForm Model="_model" OnValidSubmit="HandleRegisterAsync" FormName="RegisterForm">
-            <DataAnnotationsValidator />
+        @if (_isFirstUser || _hasValidToken)
+        {
+            <EditForm Model="_model" OnValidSubmit="HandleRegisterAsync" FormName="RegisterForm">
+                <DataAnnotationsValidator />
 
-            <div class="form-row">
-                <div class="form-group half">
-                    <label for="firstName">First Name</label>
-                    <InputText id="firstName" class="form-control" @bind-Value="_model.FirstName" placeholder="John" />
-                    <ValidationMessage For="@(() => _model.FirstName)" />
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label for="firstName">First Name</label>
+                        <InputText id="firstName" class="form-control" @bind-Value="_model.FirstName" placeholder="John" />
+                        <ValidationMessage For="@(() => _model.FirstName)" />
+                    </div>
+
+                    <div class="form-group half">
+                        <label for="lastName">Last Name</label>
+                        <InputText id="lastName" class="form-control" @bind-Value="_model.LastName" placeholder="Doe" />
+                        <ValidationMessage For="@(() => _model.LastName)" />
+                    </div>
                 </div>
 
-                <div class="form-group half">
-                    <label for="lastName">Last Name</label>
-                    <InputText id="lastName" class="form-control" @bind-Value="_model.LastName" placeholder="Doe" />
-                    <ValidationMessage For="@(() => _model.LastName)" />
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <InputText id="email" class="form-control" @bind-Value="_model.Email" placeholder="your@email.com" disabled="@(!string.IsNullOrEmpty(_invitedEmail))" />
+                    <ValidationMessage For="@(() => _model.Email)" />
+                    @if (!string.IsNullOrEmpty(_invitedEmail))
+                    {
+                        <small class="form-text">This email was set by your invitation and cannot be changed.</small>
+                    }
                 </div>
-            </div>
 
-            <div class="form-group">
-                <label for="email">Email</label>
-                <InputText id="email" class="form-control" @bind-Value="_model.Email" placeholder="your@email.com" />
-                <ValidationMessage For="@(() => _model.Email)" />
-            </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <InputText id="password" type="password" class="form-control" @bind-Value="_model.Password" placeholder="Min 8 characters" />
+                    <ValidationMessage For="@(() => _model.Password)" />
+                </div>
 
-            <div class="form-group">
-                <label for="password">Password</label>
-                <InputText id="password" type="password" class="form-control" @bind-Value="_model.Password" placeholder="Min 8 chars, 1 upper, 1 lower, 1 number" />
-                <ValidationMessage For="@(() => _model.Password)" />
-            </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <InputText id="confirmPassword" type="password" class="form-control" @bind-Value="_model.ConfirmPassword" placeholder="Confirm your password" />
+                    <ValidationMessage For="@(() => _model.ConfirmPassword)" />
+                </div>
 
-            <div class="form-group">
-                <label for="confirmPassword">Confirm Password</label>
-                <InputText id="confirmPassword" type="password" class="form-control" @bind-Value="_model.ConfirmPassword" placeholder="Confirm your password" />
-                <ValidationMessage For="@(() => _model.ConfirmPassword)" />
-            </div>
-
-            <button type="submit" class="btn btn-primary register-btn" disabled="@_isRegistering">
-                @if (_isRegistering)
-                {
-                    <span>Creating account...</span>
-                }
-                else
-                {
-                    <span>Create Account</span>
-                }
-            </button>
-        </EditForm>
+                <button type="submit" class="btn btn-primary register-btn" disabled="@_isRegistering">
+                    @if (_isRegistering)
+                    {
+                        <span>Creating account...</span>
+                    }
+                    else
+                    {
+                        <span>Create Account</span>
+                    }
+                </button>
+            </EditForm>
+        }
 
         <div class="login-link">
             <p>Already have an account? <a href="/login">Sign in</a></p>
@@ -136,6 +157,18 @@
         border-color: #5E81AC;
         outline: none;
         box-shadow: 0 0 0 3px rgba(94, 129, 172, 0.25);
+    }
+
+    .form-control:disabled {
+        background-color: #e9ecef;
+        cursor: not-allowed;
+    }
+
+    .form-text {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.875rem;
+        color: #6c757d;
     }
 
     .register-btn {

@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using IBTS2026.Api.Contracts.Users;
 using IBTS2026.Application.Abstractions.Requests;
 using IBTS2026.Application.Dtos.Users;
@@ -103,25 +104,48 @@ namespace IBTS2026.ApiService.Endpoints.Users
             app.MapPut("/users/{id:int}", async (
                 int id,
                 UpdateUserRequest request,
+                HttpContext httpContext,
                 IRequestDispatcher dispatcher,
                 CancellationToken ct) =>
             {
+                var userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userRoleClaim = httpContext.User.FindFirst(ClaimTypes.Role)?.Value;
+
+                if (!int.TryParse(userIdClaim, out var currentUserId) || string.IsNullOrEmpty(userRoleClaim))
+                {
+                    return Results.Unauthorized();
+                }
+
                 var command = new UpdateUserCommand(
                     id,
                     request.Email,
                     request.FirstName,
                     request.LastName,
-                    request.Role);
+                    request.Role,
+                    request.NewPassword,
+                    currentUserId,
+                    userRoleClaim);
 
-                var result = await dispatcher
-                    .SendAsync<UpdateUserCommand, bool>(command, ct);
+                try
+                {
+                    var result = await dispatcher
+                        .SendAsync<UpdateUserCommand, bool>(command, ct);
 
-                return result ? Results.NoContent() : Results.NotFound();
+                    return result ? Results.NoContent() : Results.NotFound();
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    return Results.Forbid();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.BadRequest(new { error = ex.Message });
+                }
             })
             .RequireAuthorization("RequireUserRole")
             .WithName("UpdateUser")
             .WithSummary("Update an existing user")
-            .WithDescription("Updates an existing user's details by their unique identifier. Returns 204 No Content on success or 404 Not Found if the user does not exist.")
+            .WithDescription("Updates an existing user's details. Non-admin users can only update their own FirstName, LastName, and Password. Admins can update any user's Email and Role.")
             .WithTags("Users")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status401Unauthorized)

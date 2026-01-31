@@ -58,6 +58,11 @@ builder.Services.AddHttpClient<IIncidentNoteApiClient, IncidentNoteApiClient>(cl
     client.BaseAddress = new Uri("https+http://apiservice");
 }).AddHttpMessageHandler<AuthorizationMessageHandler>();
 
+builder.Services.AddHttpClient<IInvitationApiClient, InvitationApiClient>(client =>
+{
+    client.BaseAddress = new Uri("https+http://apiservice");
+}).AddHttpMessageHandler<AuthorizationMessageHandler>();
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

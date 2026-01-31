@@ -36,6 +36,7 @@ public static class DependencyInjection
 
         // Register repositories
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IUserInvitationRepository, UserInvitationRepository>();
         services.AddScoped<IIncidentRepository, IncidentRepository>();
         services.AddScoped<IIncidentNoteRepository, IncidentNoteRepository>();
         services.AddScoped<INotificationOutboxRepository, NotificationOutboxRepository>();

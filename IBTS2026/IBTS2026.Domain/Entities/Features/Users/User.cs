@@ -1,20 +1,18 @@
 ﻿#nullable enable
 
-using IBTS2026;
-
 namespace IBTS2026.Domain.Entities.Features.Users;
 
 public class User
 {
     public int UserId { get; set; }
 
-    public string Email { get; set; }
+    public string Email { get; set; } = string.Empty;
 
-    public string FirstName { get; set; }
+    public string FirstName { get; set; } = string.Empty;
 
-    public string LastName { get; set; }
+    public string LastName { get; set; } = string.Empty;
 
-    public int RoleId { get; set; }
+    public string Role { get; set; } = string.Empty;
 
     public DateTime? CreatedAt { get; set; }
     public string? PasswordHash { get; set; }
@@ -27,14 +25,14 @@ public class User
         string email,
         string firstName,
         string lastName,
-        int roleId)
+        string role)
     {
         return new User
         {
             Email = email,
             FirstName = firstName,
             LastName = lastName,
-            RoleId = roleId,
+            Role = role,
             IsActive = true,
             FailedLoginCount = 0,
             CreatedAt = DateTime.UtcNow
@@ -45,7 +43,7 @@ public class User
         string email,
         string firstName,
         string lastName,
-        int roleId,
+        string role,
         string passwordHash)
     {
         return new User
@@ -53,7 +51,7 @@ public class User
             Email = email,
             FirstName = firstName,
             LastName = lastName,
-            RoleId = roleId,
+            Role = role,
             PasswordHash = passwordHash,
             IsActive = true,
             FailedLoginCount = 0,
@@ -76,9 +74,9 @@ public class User
         Email = email;
     }
 
-    public void ChangeRole(int roleId)
+    public void ChangeRole(string role)
     {
-        RoleId = roleId;
+        Role = role;
     }
 
     public void SetPassword(string passwordHash)

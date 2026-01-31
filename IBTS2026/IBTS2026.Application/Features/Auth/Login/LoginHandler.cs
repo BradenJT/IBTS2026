@@ -3,6 +3,7 @@ using IBTS2026.Application.Abstractions.Persistence;
 using IBTS2026.Application.Abstractions.Requests;
 using IBTS2026.Application.Abstractions.Services;
 using IBTS2026.Domain.Interfaces.Users;
+using Microsoft.Extensions.Logging;
 
 namespace IBTS2026.Application.Features.Auth.Login;
 
@@ -11,13 +12,15 @@ public sealed class LoginHandler(
     IUnitOfWork unitOfWork,
     IPasswordHashingService passwordHasher,
     ITokenService tokenService,
-    IValidator<LoginCommand> validator) : IRequestHandler<LoginCommand, LoginResult>
+    IValidator<LoginCommand> validator,
+    ILogger<LoginHandler> logger) : IRequestHandler<LoginCommand, LoginResult>
 {
     private readonly IUserRepository _users = users ?? throw new ArgumentNullException(nameof(users));
     private readonly IUnitOfWork _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     private readonly IPasswordHashingService _passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
     private readonly ITokenService _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
     private readonly IValidator<LoginCommand> _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+    private readonly ILogger<LoginHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<LoginResult> Handle(LoginCommand command, CancellationToken ct)
     {
@@ -67,8 +70,16 @@ public sealed class LoginHandler(
         _users.Update(user);
         await _unitOfWork.SaveChangesAsync(ct);
 
+        _logger.LogInformation(
+            "LOGIN DEBUG: User {UserId} ({Email}) logging in with Role: '{Role}'",
+            user.UserId, user.Email, user.Role ?? "(null)");
+
         // Generate JWT token
         var token = _tokenService.GenerateToken(user.UserId, user.Email!, user.Role!);
+
+        _logger.LogInformation(
+            "LOGIN DEBUG: Generated token for user {UserId}, token length: {TokenLength}",
+            user.UserId, token?.Length ?? 0);
 
         return new LoginResult(
             true,
