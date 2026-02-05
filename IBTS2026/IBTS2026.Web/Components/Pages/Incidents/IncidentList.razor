@@ -8,105 +8,377 @@
 
 <PageTitle>Incidents</PageTitle>
 
-<h1>Incidents</h1>
-
-<div class="mb-3">
-    <button class="btn btn-primary" @onclick="NavigateToCreate">
-        Create New Incident
-    </button>
-</div>
-
-<div class="row mb-3">
-    <div class="col-md-4">
-        <input type="text" class="form-control" placeholder="Search incidents..."
-               @bind="searchTerm" @bind:event="oninput" @onkeyup="OnSearchKeyUp" />
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1>Incidents</h1>
+            <p class="page-subtitle">Track and manage incident reports</p>
+        </div>
+        <button class="btn btn-primary" @onclick="NavigateToCreate">
+            <span class="btn-icon">+</span>
+            Create Incident
+        </button>
     </div>
-    <div class="col-md-2">
-        <select class="form-select" @bind="statusFilter" @bind:after="OnFilterChange">
-            <option value="">All Statuses</option>
-            <option value="1">Open</option>
-            <option value="2">In Progress</option>
-            <option value="3">Closed</option>
-        </select>
-    </div>
-    <div class="col-md-2">
-        <select class="form-select" @bind="priorityFilter" @bind:after="OnFilterChange">
-            <option value="">All Priorities</option>
-            <option value="1">Low</option>
-            <option value="2">Medium</option>
-            <option value="3">High</option>
-            <option value="4">Critical</option>
-        </select>
-    </div>
-</div>
 
-@if (isLoading)
-{
-    <p><em>Loading...</em></p>
-}
-else if (errorMessage is not null)
-{
-    <div class="alert alert-danger">@errorMessage</div>
-}
-else if (incidents is not null)
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Title</th>
-                <th>Status</th>
-                <th>Priority</th>
-                <th>Created</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var incident in incidents.Items)
+    <div class="filters-bar">
+        <div class="search-input-wrapper">
+            <span class="search-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+            </span>
+            <input type="text" class="form-control search-input" placeholder="Search incidents..."
+                   @bind="searchTerm" @bind:event="oninput" @onkeyup="OnSearchKeyUp" />
+        </div>
+        <div class="filter-group">
+            <select class="form-select filter-select" @bind="statusFilter" @bind:after="OnFilterChange">
+                <option value="">All Statuses</option>
+                <option value="1">Open</option>
+                <option value="2">In Progress</option>
+                <option value="3">Closed</option>
+            </select>
+            <select class="form-select filter-select" @bind="priorityFilter" @bind:after="OnFilterChange">
+                <option value="">All Priorities</option>
+                <option value="1">Low</option>
+                <option value="2">Medium</option>
+                <option value="3">High</option>
+                <option value="4">Critical</option>
+            </select>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loading-state">
+            <div class="spinner-border"></div>
+            <p>Loading incidents...</p>
+        </div>
+    }
+    else if (errorMessage is not null)
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+    else if (incidents is not null && incidents.Items.Count > 0)
+    {
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th class="col-id">ID</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Created</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var incident in incidents.Items)
+                    {
+                        <tr>
+                            <td class="col-id">
+                                <span class="incident-id">#@incident.IncidentId</span>
+                            </td>
+                            <td>
+                                <a href="/incidents/@incident.IncidentId" class="incident-title">@incident.Title</a>
+                            </td>
+                            <td>
+                                <span class="status-badge @GetStatusBadgeClass(incident.StatusId)">
+                                    @incident.StatusName
+                                </span>
+                            </td>
+                            <td>
+                                <span class="priority-badge @GetPriorityBadgeClass(incident.PriorityId)">
+                                    @incident.PriorityName
+                                </span>
+                            </td>
+                            <td>
+                                <span class="date-cell">@incident.CreatedAt.ToString("MMM dd, yyyy")</span>
+                            </td>
+                            <td class="actions-cell">
+                                <button class="btn btn-sm btn-outline-primary" @onclick="() => NavigateToDetail(incident.IncidentId)">
+                                    View
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteIncident(incident.IncidentId)">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination-container">
+            <div class="pagination-info">
+                Showing @GetShowingRange() of @incidents.TotalCount incidents
+            </div>
+            <nav>
+                <ul class="pagination">
+                    <li class="page-item @(incidents.HasPreviousPage ? "" : "disabled")">
+                        <button class="page-link" @onclick="PreviousPage" disabled="@(!incidents.HasPreviousPage)">
+                            Previous
+                        </button>
+                    </li>
+                    <li class="page-item active">
+                        <span class="page-link">@incidents.PageNumber</span>
+                    </li>
+                    <li class="page-item @(incidents.HasNextPage ? "" : "disabled")">
+                        <button class="page-link" @onclick="NextPage" disabled="@(!incidents.HasNextPage)">
+                            Next
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
+            </div>
+            <h3>No incidents found</h3>
+            <p>@GetEmptyStateMessage()</p>
+            @if (string.IsNullOrEmpty(searchTerm) && string.IsNullOrEmpty(statusFilter) && string.IsNullOrEmpty(priorityFilter))
             {
-                <tr>
-                    <td>@incident.IncidentId</td>
-                    <td>
-                        <a href="/incidents/@incident.IncidentId">@incident.Title</a>
-                    </td>
-                    <td>
-                        <span class="badge @GetStatusBadgeClass(incident.StatusId)">
-                            @incident.StatusName
-                        </span>
-                    </td>
-                    <td>
-                        <span class="badge @GetPriorityBadgeClass(incident.PriorityId)">
-                            @incident.PriorityName
-                        </span>
-                    </td>
-                    <td>@incident.CreatedAt.ToString("g")</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary" @onclick="() => NavigateToDetail(incident.IncidentId)">
-                            View
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteIncident(incident.IncidentId)">
-                            Delete
-                        </button>
-                    </td>
-                </tr>
+                <button class="btn btn-primary" @onclick="NavigateToCreate">Create Incident</button>
             }
-        </tbody>
-    </table>
+            else
+            {
+                <button class="btn btn-secondary" @onclick="ClearFilters">Clear Filters</button>
+            }
+        </div>
+    }
+</div>
 
-    <nav>
-        <ul class="pagination">
-            <li class="page-item @(incidents.HasPreviousPage ? "" : "disabled")">
-                <button class="page-link" @onclick="PreviousPage" disabled="@(!incidents.HasPreviousPage)">Previous</button>
-            </li>
-            <li class="page-item disabled">
-                <span class="page-link">Page @incidents.PageNumber of @incidents.TotalPages (@incidents.TotalCount total)</span>
-            </li>
-            <li class="page-item @(incidents.HasNextPage ? "" : "disabled")">
-                <button class="page-link" @onclick="NextPage" disabled="@(!incidents.HasNextPage)">Next</button>
-            </li>
-        </ul>
-    </nav>
-}
+<style>
+    .page-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: var(--space-5);
+    }
+
+    .page-header h1 {
+        margin-bottom: var(--space-1);
+    }
+
+    .page-subtitle {
+        color: var(--color-text-muted);
+        margin-bottom: 0;
+        font-size: var(--font-size-sm);
+    }
+
+    .btn-icon {
+        margin-right: var(--space-2);
+        font-weight: var(--font-weight-bold);
+    }
+
+    .filters-bar {
+        display: flex;
+        gap: var(--space-4);
+        margin-bottom: var(--space-5);
+        flex-wrap: wrap;
+    }
+
+    .search-input-wrapper {
+        position: relative;
+        flex: 1;
+        min-width: 250px;
+        max-width: 400px;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: var(--space-3);
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--color-text-light);
+    }
+
+    .search-input {
+        padding-left: 2.5rem;
+    }
+
+    .filter-group {
+        display: flex;
+        gap: var(--space-3);
+    }
+
+    .filter-select {
+        min-width: 150px;
+    }
+
+    .table-container {
+        background: var(--color-bg-primary);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+
+    .col-id {
+        width: 80px;
+    }
+
+    .incident-id {
+        font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+        font-size: var(--font-size-sm);
+        color: var(--color-text-muted);
+    }
+
+    .incident-title {
+        font-weight: var(--font-weight-medium);
+        color: var(--color-text-primary);
+    }
+
+    .incident-title:hover {
+        color: var(--color-primary);
+    }
+
+    .status-badge,
+    .priority-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: var(--space-1) var(--space-3);
+        border-radius: var(--radius-full);
+        font-size: var(--font-size-xs);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    .status-badge.open {
+        background-color: rgba(94, 129, 172, 0.15);
+        color: var(--color-primary);
+    }
+
+    .status-badge.in-progress {
+        background-color: var(--color-warning-bg);
+        color: var(--color-warning-text);
+    }
+
+    .status-badge.closed {
+        background-color: var(--color-success-bg);
+        color: var(--color-success-text);
+    }
+
+    .priority-badge.low {
+        background-color: var(--color-info-bg);
+        color: var(--color-info-text);
+    }
+
+    .priority-badge.medium {
+        background-color: var(--color-warning-bg);
+        color: var(--color-warning-text);
+    }
+
+    .priority-badge.high {
+        background-color: var(--color-error-bg);
+        color: var(--color-error-text);
+    }
+
+    .priority-badge.critical {
+        background-color: var(--color-bg-dark);
+        color: var(--color-text-inverse);
+    }
+
+    .date-cell {
+        font-size: var(--font-size-sm);
+        color: var(--color-text-muted);
+    }
+
+    .actions-cell {
+        text-align: right;
+    }
+
+    .actions-cell .btn {
+        margin-left: var(--space-2);
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: var(--space-5);
+    }
+
+    .pagination-info {
+        color: var(--color-text-muted);
+        font-size: var(--font-size-sm);
+    }
+
+    .loading-state {
+        text-align: center;
+        padding: var(--space-10);
+    }
+
+    .loading-state .spinner-border {
+        width: 2rem;
+        height: 2rem;
+        color: var(--color-primary);
+        margin-bottom: var(--space-4);
+    }
+
+    .loading-state p {
+        color: var(--color-text-muted);
+        margin-bottom: 0;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: var(--space-10);
+        background: var(--color-bg-primary);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .empty-state-icon {
+        color: var(--color-text-light);
+        margin-bottom: var(--space-4);
+    }
+
+    .empty-state h3 {
+        margin-bottom: var(--space-2);
+        color: var(--color-text-primary);
+    }
+
+    .empty-state p {
+        color: var(--color-text-muted);
+        margin-bottom: var(--space-5);
+    }
+
+    @@media (max-width: 768px) {
+        .filters-bar {
+            flex-direction: column;
+        }
+
+        .search-input-wrapper {
+            max-width: none;
+        }
+
+        .filter-group {
+            width: 100%;
+        }
+
+        .filter-select {
+            flex: 1;
+        }
+    }
+</style>
 
 @code {
     private PagedResultModel<IncidentModel>? incidents;
@@ -181,6 +453,15 @@ else if (incidents is not null)
         await LoadIncidents();
     }
 
+    private async Task ClearFilters()
+    {
+        searchTerm = string.Empty;
+        statusFilter = string.Empty;
+        priorityFilter = string.Empty;
+        currentPage = 1;
+        await LoadIncidents();
+    }
+
     private async Task PreviousPage()
     {
         if (incidents?.HasPreviousPage == true)
@@ -231,20 +512,37 @@ else if (incidents is not null)
 
     private static string GetStatusBadgeClass(int statusId) => statusId switch
     {
-        1 => "bg-primary",      // Open
-        2 => "bg-warning",      // In Progress
-        3 => "bg-success",      // Closed
-        _ => "bg-secondary"
+        1 => "open",
+        2 => "in-progress",
+        3 => "closed",
+        _ => ""
     };
 
     private static string GetPriorityBadgeClass(int priorityId) => priorityId switch
     {
-        1 => "bg-info",         // Low
-        2 => "bg-warning",      // Medium
-        3 => "bg-danger",       // High
-        4 => "bg-dark",         // Critical
-        _ => "bg-secondary"
+        1 => "low",
+        2 => "medium",
+        3 => "high",
+        4 => "critical",
+        _ => ""
     };
+
+    private string GetShowingRange()
+    {
+        if (incidents == null) return "0";
+        var start = (incidents.PageNumber - 1) * PageSize + 1;
+        var end = Math.Min(incidents.PageNumber * PageSize, incidents.TotalCount);
+        return $"{start}-{end}";
+    }
+
+    private string GetEmptyStateMessage()
+    {
+        if (!string.IsNullOrEmpty(searchTerm) || !string.IsNullOrEmpty(statusFilter) || !string.IsNullOrEmpty(priorityFilter))
+        {
+            return "Try adjusting your search or filters.";
+        }
+        return "Get started by creating a new incident.";
+    }
 
     public void Dispose()
     {

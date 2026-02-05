@@ -8,21 +8,31 @@
 
 <PageTitle>Edit Incident</PageTitle>
 
-<h1>Edit Incident #@IncidentId</h1>
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1>Edit Incident #@IncidentId</h1>
+            <p class="page-subtitle">Update incident details</p>
+        </div>
+    </div>
 
-<div class="row">
-    <div class="col-md-8">
-        @if (isLoading)
-        {
-            <p><em>Loading...</em></p>
-        }
-        else if (notFound)
-        {
+    @if (isLoading)
+    {
+        <div class="loading-state">
+            <div class="spinner-border"></div>
+            <p>Loading incident...</p>
+        </div>
+    }
+    else if (notFound)
+    {
+        <div class="form-card">
             <div class="alert alert-warning">Incident not found.</div>
             <button class="btn btn-secondary" @onclick="Cancel">Back to Incidents</button>
-        }
-        else
-        {
+        </div>
+    }
+    else
+    {
+        <div class="form-card">
             @if (errorMessage is not null)
             {
                 <div class="alert alert-danger">@errorMessage</div>
@@ -30,22 +40,22 @@
 
             <EditForm Model="incident" OnValidSubmit="HandleSubmit" FormName="EditIncidentForm">
                 <DataAnnotationsValidator />
-                <ValidationSummary class="text-danger" />
+                <ValidationSummary class="alert alert-danger" />
 
-                <div class="mb-3">
+                <div class="form-group">
                     <label for="title" class="form-label">Title</label>
                     <InputText id="title" class="form-control" @bind-Value="incident.Title" />
-                    <ValidationMessage For="() => incident.Title" class="text-danger" />
+                    <ValidationMessage For="() => incident.Title" />
                 </div>
 
-                <div class="mb-3">
+                <div class="form-group">
                     <label for="description" class="form-label">Description</label>
                     <InputTextArea id="description" class="form-control" rows="5" @bind-Value="incident.Description" />
-                    <ValidationMessage For="() => incident.Description" class="text-danger" />
+                    <ValidationMessage For="() => incident.Description" />
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
+                <div class="form-row">
+                    <div class="form-group form-group-half">
                         <label for="priority" class="form-label">Priority</label>
                         <InputSelect id="priority" class="form-select" @bind-Value="incident.PriorityId">
                             @foreach (var priority in priorities)
@@ -55,7 +65,7 @@
                         </InputSelect>
                     </div>
 
-                    <div class="col-md-6 mb-3">
+                    <div class="form-group form-group-half">
                         <label for="status" class="form-label">Status</label>
                         <InputSelect id="status" class="form-select" @bind-Value="incident.StatusId">
                             @foreach (var status in statuses)
@@ -66,7 +76,7 @@
                     </div>
                 </div>
 
-                <div class="mb-3">
+                <div class="form-group">
                     <label for="assignedTo" class="form-label">Assigned To</label>
                     <InputSelect id="assignedTo" class="form-select" @bind-Value="incident.AssignedToUserId">
                         <option value="">-- Unassigned --</option>
@@ -77,11 +87,12 @@
                     </InputSelect>
                 </div>
 
-                <div class="mb-3">
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
                     <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
                         @if (isSubmitting)
                         {
-                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <span class="spinner-border spinner-border-sm"></span>
                             <span>Saving...</span>
                         }
                         else
@@ -89,12 +100,84 @@
                             <span>Save Changes</span>
                         }
                     </button>
-                    <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
                 </div>
             </EditForm>
-        }
-    </div>
+        </div>
+    }
 </div>
+
+<style>
+    .page-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        margin-bottom: var(--space-5);
+    }
+
+    .page-header h1 {
+        margin-bottom: var(--space-1);
+    }
+
+    .page-subtitle {
+        color: var(--color-text-muted);
+        margin-bottom: 0;
+        font-size: var(--font-size-sm);
+    }
+
+    .form-card {
+        background: var(--color-bg-primary);
+        padding: var(--space-6);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .form-row {
+        display: flex;
+        gap: var(--space-4);
+    }
+
+    .form-group-half {
+        flex: 1;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--space-3);
+        margin-top: var(--space-5);
+        padding-top: var(--space-5);
+        border-top: 1px solid var(--color-border-light);
+    }
+
+    .loading-state {
+        text-align: center;
+        padding: var(--space-10);
+        background: var(--color-bg-primary);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .loading-state .spinner-border {
+        width: 2rem;
+        height: 2rem;
+        color: var(--color-primary);
+        margin-bottom: var(--space-4);
+    }
+
+    .loading-state p {
+        color: var(--color-text-muted);
+        margin-bottom: 0;
+    }
+
+    @@media (max-width: 768px) {
+        .form-row {
+            flex-direction: column;
+            gap: 0;
+        }
+    }
+</style>
 
 @code {
     [Parameter]
