@@ -100,5 +100,4 @@ Key settings in `appsettings.json`:
 
 
 ## License
-
-Proprietary
+MIT License. See [LICENSE](LICENSE) for details.
