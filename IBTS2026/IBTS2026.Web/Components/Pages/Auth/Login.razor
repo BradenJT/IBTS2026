@@ -7,34 +7,37 @@
 
 <PageTitle>Login - IBTS</PageTitle>
 
-<div class="login-container">
-    <div class="login-card">
-        <h2>Login to IBTS</h2>
-        <p class="login-subtitle">Enter your credentials to sign in</p>
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2>Welcome back</h2>
+            <p class="auth-subtitle">Sign in to your account</p>
+        </div>
 
         @if (_errorMessage != null)
         {
-            <div class="error-message">@_errorMessage</div>
+            <div class="alert alert-danger">@_errorMessage</div>
         }
 
         <EditForm Model="_model" OnValidSubmit="HandleLoginAsync" FormName="LoginForm">
             <DataAnnotationsValidator />
 
             <div class="form-group">
-                <label for="email">Email</label>
-                <InputText id="email" class="form-control" @bind-Value="_model.Email" placeholder="your@email.com" />
+                <label for="email" class="form-label">Email</label>
+                <InputText id="email" class="form-control" @bind-Value="_model.Email" placeholder="you@example.com" />
                 <ValidationMessage For="@(() => _model.Email)" />
             </div>
 
             <div class="form-group">
-                <label for="password">Password</label>
-                <InputText id="password" type="password" class="form-control" @bind-Value="_model.Password" placeholder="Your password" />
+                <label for="password" class="form-label">Password</label>
+                <InputText id="password" type="password" class="form-control" @bind-Value="_model.Password" placeholder="Enter your password" />
                 <ValidationMessage For="@(() => _model.Password)" />
             </div>
 
-            <button type="submit" class="btn btn-primary login-btn" disabled="@_isLoggingIn">
+            <button type="submit" class="btn btn-primary btn-block" disabled="@_isLoggingIn">
                 @if (_isLoggingIn)
                 {
+                    <span class="spinner-border spinner-border-sm"></span>
                     <span>Signing in...</span>
                 }
                 else
@@ -44,113 +47,71 @@
             </button>
         </EditForm>
 
-        <div class="register-link">
+        <div class="auth-footer">
             <p>Don't have an account? <a href="/register">Create one</a></p>
         </div>
     </div>
 </div>
 
 <style>
-    .login-container {
+    .auth-container {
         display: flex;
         justify-content: center;
         align-items: center;
-        min-height: 80vh;
+        min-height: calc(100vh - 7rem);
+        padding: var(--space-5);
     }
 
-    .login-card {
-        background: #fff;
-        padding: 2rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        max-width: 400px;
+    .auth-card {
+        background: var(--color-bg-primary);
+        padding: var(--space-6);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-lg);
+        max-width: 420px;
         width: 100%;
     }
 
-    .login-card h2 {
-        margin-bottom: 0.5rem;
-        color: #3B4252;
+    .auth-header {
+        text-align: center;
+        margin-bottom: var(--space-6);
     }
 
-    .login-subtitle {
-        color: #6c757d;
-        margin-bottom: 1.5rem;
+    .auth-header h2 {
+        margin-bottom: var(--space-2);
+        color: var(--color-text-primary);
+        font-size: var(--font-size-2xl);
     }
 
-    .form-group {
-        margin-bottom: 1.5rem;
+    .auth-subtitle {
+        color: var(--color-text-muted);
+        margin-bottom: 0;
+        font-size: var(--font-size-sm);
     }
 
-    .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-        color: #434C5E;
-    }
-
-    .form-control {
+    .btn-block {
         width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-        font-size: 1rem;
-        box-sizing: border-box;
+        padding: var(--space-3);
+        font-size: var(--font-size-base);
+        margin-top: var(--space-2);
     }
 
-    .form-control:focus {
-        border-color: #5E81AC;
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(94, 129, 172, 0.25);
-    }
-
-    .login-btn {
-        width: 100%;
-        padding: 0.75rem;
-        background-color: #5E81AC;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        font-size: 1rem;
-        cursor: pointer;
-        margin-top: 0.5rem;
-    }
-
-    .login-btn:hover:not(:disabled) {
-        background-color: #4C6C8A;
-    }
-
-    .login-btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    .error-message {
-        color: #dc3545;
-        background-color: #f8d7da;
-        border-radius: 4px;
-        padding: 0.75rem;
-        margin-bottom: 1rem;
+    .auth-footer {
+        margin-top: var(--space-5);
         text-align: center;
     }
 
-    .register-link {
-        margin-top: 1.5rem;
-        text-align: center;
-        color: #6c757d;
+    .auth-footer p {
+        color: var(--color-text-muted);
+        margin-bottom: 0;
+        font-size: var(--font-size-sm);
     }
 
-    .register-link a {
-        color: #5E81AC;
-        text-decoration: none;
+    .auth-footer a {
+        color: var(--color-primary);
+        font-weight: var(--font-weight-medium);
     }
 
-    .register-link a:hover {
-        text-decoration: underline;
-    }
-
-    .validation-message {
-        color: #dc3545;
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
+    .auth-footer a:hover {
+        color: var(--color-primary-hover);
     }
 </style>

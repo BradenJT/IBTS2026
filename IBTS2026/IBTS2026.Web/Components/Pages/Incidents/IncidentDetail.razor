@@ -11,148 +11,405 @@
 
 <PageTitle>Incident Details</PageTitle>
 
-@if (_isLoading)
-{
-    <p><em>Loading...</em></p>
-}
-else if (_notFound)
-{
-    <div class="alert alert-warning">Incident not found.</div>
-    <button class="btn btn-secondary" @onclick="NavigateToList">Back to Incidents</button>
-}
-else if (_incident is not null)
-{
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Incident #@_incident.IncidentId</h1>
-        <div>
-            <button class="btn btn-secondary" @onclick="NavigateToList">Back to List</button>
+<div class="page-container">
+    @if (_isLoading)
+    {
+        <div class="loading-state">
+            <div class="spinner-border"></div>
+            <p>Loading incident...</p>
         </div>
-    </div>
-
-    @if (_errorMessage is not null)
-    {
-        <div class="alert alert-danger">@_errorMessage</div>
     }
-
-    @if (_successMessage is not null)
+    else if (_notFound)
     {
-        <div class="alert alert-success">@_successMessage</div>
+        <div class="card">
+            <div class="card-body">
+                <div class="alert alert-warning mb-4">Incident not found.</div>
+                <button class="btn btn-secondary" @onclick="NavigateToList">Back to Incidents</button>
+            </div>
+        </div>
     }
-
-    <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">@_incident.Title</h4>
-            @if (HasChanges)
-            {
-                <div>
-                    <button class="btn btn-success btn-sm" @onclick="SaveChangesAsync" disabled="@_isSaving">
+    else if (_incident is not null)
+    {
+        <div class="page-header">
+            <div class="header-content">
+                <div class="header-title">
+                    <span class="incident-id">#@_incident.IncidentId</span>
+                    <h1>@_incident.Title</h1>
+                </div>
+                <div class="header-meta">
+                    <span class="meta-item">
+                        <span class="meta-label">Created by</span>
+                        <span class="meta-value">@_incident.CreatedByName</span>
+                    </span>
+                    <span class="meta-item">
+                        <span class="meta-label">Created</span>
+                        <span class="meta-value">@_incident.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")</span>
+                    </span>
+                </div>
+            </div>
+            <div class="header-actions">
+                @if (HasChanges)
+                {
+                    <button class="btn btn-success" @onclick="SaveChangesAsync" disabled="@_isSaving">
                         @(_isSaving ? "Saving..." : "Save Changes")
                     </button>
-                    <button class="btn btn-outline-secondary btn-sm" @onclick="CancelChanges" disabled="@_isSaving">
+                    <button class="btn btn-outline-secondary" @onclick="CancelChanges" disabled="@_isSaving">
                         Cancel
                     </button>
-                </div>
-            }
-        </div>
-        <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">Status</label>
-                    <select class="form-select" @bind="_selectedStatusId">
-                        @foreach (var status in _statuses)
-                        {
-                            <option value="@status.StatusId">@status.StatusName</option>
-                        }
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">Priority</label>
-                    <select class="form-select" @bind="_selectedPriorityId">
-                        @foreach (var priority in _priorities)
-                        {
-                            <option value="@priority.PriorityId">@priority.PriorityName</option>
-                        }
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">Assigned To</label>
-                    <select class="form-select" @bind="_selectedAssignedToId">
-                        <option value="">Unassigned</option>
-                        @foreach (var user in _users)
-                        {
-                            <option value="@user.UserId">@user.FullName</option>
-                        }
-                    </select>
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <strong>Created By:</strong> @_incident.CreatedByName
-                </div>
-                <div class="col-md-6">
-                    <strong>Created At:</strong> @_incident.CreatedAt.ToString("F")
-                </div>
-            </div>
-
-            <hr />
-
-            <div class="row">
-                <div class="col-12">
-                    <h5>Description</h5>
-                    <p class="text-muted" style="white-space: pre-wrap;">@_incident.Description</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Journal Notes Section -->
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">Journal Notes</h5>
-        </div>
-        <div class="card-body">
-            <!-- Add Note Form -->
-            <div class="mb-4">
-                <div class="form-group">
-                    <label class="form-label">Add a Note</label>
-                    <textarea class="form-control" rows="3" placeholder="Enter your note..."
-                              @bind="_newNoteContent" disabled="@_isAddingNote"></textarea>
-                </div>
-                <button class="btn btn-primary mt-2" @onclick="AddNoteAsync"
-                        disabled="@(string.IsNullOrWhiteSpace(_newNoteContent) || _isAddingNote)">
-                    @(_isAddingNote ? "Adding..." : "Add Note")
-                </button>
-            </div>
-
-            @if (_noteError is not null)
-            {
-                <div class="alert alert-danger">@_noteError</div>
-            }
-
-            <hr />
-
-            <!-- Notes List -->
-            @if (_notes.Count == 0)
-            {
-                <p class="text-muted">No notes yet.</p>
-            }
-            else
-            {
-                @foreach (var note in _notes)
-                {
-                    <div class="note-item mb-3 p-3 border rounded">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <strong>@note.CreatedByName</strong>
-                            <small class="text-muted">@note.CreatedAt.ToString("g")</small>
-                        </div>
-                        <p class="mb-0 mt-2" style="white-space: pre-wrap;">@note.Content</p>
-                    </div>
                 }
-            }
+                <button class="btn btn-secondary" @onclick="NavigateToList">Back to List</button>
+            </div>
         </div>
-    </div>
-}
+
+        @if (_errorMessage is not null)
+        {
+            <div class="alert alert-danger">@_errorMessage</div>
+        }
+
+        @if (_successMessage is not null)
+        {
+            <div class="alert alert-success">@_successMessage</div>
+        }
+
+        <div class="detail-grid">
+            <!-- Status & Assignment Panel -->
+            <div class="status-panel card">
+                <div class="card-header">
+                    <h5>Status & Assignment</h5>
+                </div>
+                <div class="card-body">
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" @bind="_selectedStatusId">
+                                @foreach (var status in _statuses)
+                                {
+                                    <option value="@status.StatusId">@status.StatusName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="status-item">
+                            <label class="form-label">Priority</label>
+                            <select class="form-select" @bind="_selectedPriorityId">
+                                @foreach (var priority in _priorities)
+                                {
+                                    <option value="@priority.PriorityId">@priority.PriorityName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="status-item full-width">
+                            <label class="form-label">Assigned To</label>
+                            <select class="form-select" @bind="_selectedAssignedToId">
+                                <option value="">Unassigned</option>
+                                @foreach (var user in _users)
+                                {
+                                    <option value="@user.UserId">@user.FullName</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description Panel -->
+            <div class="description-panel card">
+                <div class="card-header">
+                    <h5>Description</h5>
+                </div>
+                <div class="card-body">
+                    <p class="description-text">@_incident.Description</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Journal Notes Section -->
+        <div class="notes-section card">
+            <div class="card-header">
+                <h5>Journal Notes</h5>
+                <span class="notes-count">@_notes.Count @(_notes.Count == 1 ? "note" : "notes")</span>
+            </div>
+            <div class="card-body">
+                <!-- Add Note Form -->
+                <div class="add-note-form">
+                    <textarea class="form-control" rows="3" placeholder="Add a note to this incident..."
+                              @bind="_newNoteContent" disabled="@_isAddingNote"></textarea>
+                    <button class="btn btn-primary" @onclick="AddNoteAsync"
+                            disabled="@(string.IsNullOrWhiteSpace(_newNoteContent) || _isAddingNote)">
+                        @if (_isAddingNote)
+                        {
+                            <span class="spinner-border spinner-border-sm"></span>
+                            <span>Adding...</span>
+                        }
+                        else
+                        {
+                            <span>Add Note</span>
+                        }
+                    </button>
+                </div>
+
+                @if (_noteError is not null)
+                {
+                    <div class="alert alert-danger">@_noteError</div>
+                }
+
+                <!-- Notes List -->
+                <div class="notes-list">
+                    @if (_notes.Count == 0)
+                    {
+                        <div class="empty-notes">
+                            <p>No notes yet. Add the first note to this incident.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var note in _notes)
+                        {
+                            <div class="note-item">
+                                <div class="note-header">
+                                    <div class="note-author">
+                                        <div class="author-avatar">@GetInitials(note.CreatedByName)</div>
+                                        <span class="author-name">@note.CreatedByName</span>
+                                    </div>
+                                    <span class="note-date">@note.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")</span>
+                                </div>
+                                <p class="note-content">@note.Content</p>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .page-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: var(--space-5);
+        flex-wrap: wrap;
+        gap: var(--space-4);
+    }
+
+    .header-content {
+        flex: 1;
+        min-width: 300px;
+    }
+
+    .header-title {
+        margin-bottom: var(--space-3);
+    }
+
+    .incident-id {
+        font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+        font-size: var(--font-size-sm);
+        color: var(--color-primary);
+        font-weight: var(--font-weight-semibold);
+        display: block;
+        margin-bottom: var(--space-1);
+    }
+
+    .header-title h1 {
+        margin-bottom: 0;
+        font-size: var(--font-size-2xl);
+    }
+
+    .header-meta {
+        display: flex;
+        gap: var(--space-5);
+        flex-wrap: wrap;
+    }
+
+    .meta-item {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+    }
+
+    .meta-label {
+        font-size: var(--font-size-xs);
+        color: var(--color-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .meta-value {
+        font-size: var(--font-size-sm);
+        color: var(--color-text-secondary);
+        font-weight: var(--font-weight-medium);
+    }
+
+    .header-actions {
+        display: flex;
+        gap: var(--space-2);
+        flex-wrap: wrap;
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: var(--space-5);
+        margin-bottom: var(--space-5);
+    }
+
+    .status-panel .card-header h5,
+    .description-panel .card-header h5,
+    .notes-section .card-header h5 {
+        margin: 0;
+        font-size: var(--font-size-base);
+        font-weight: var(--font-weight-semibold);
+    }
+
+    .status-grid {
+        display: grid;
+        gap: var(--space-4);
+    }
+
+    .status-item.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .description-text {
+        white-space: pre-wrap;
+        color: var(--color-text-secondary);
+        margin-bottom: 0;
+        line-height: var(--line-height-relaxed);
+    }
+
+    .notes-section .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .notes-count {
+        font-size: var(--font-size-sm);
+        color: var(--color-text-muted);
+        font-weight: var(--font-weight-normal);
+    }
+
+    .add-note-form {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+        padding-bottom: var(--space-5);
+        border-bottom: 1px solid var(--color-border-light);
+        margin-bottom: var(--space-5);
+    }
+
+    .add-note-form .btn {
+        align-self: flex-end;
+    }
+
+    .notes-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+    }
+
+    .empty-notes {
+        text-align: center;
+        padding: var(--space-6);
+        color: var(--color-text-muted);
+    }
+
+    .empty-notes p {
+        margin-bottom: 0;
+    }
+
+    .note-item {
+        padding: var(--space-4);
+        background: var(--color-bg-secondary);
+        border-radius: var(--radius-md);
+    }
+
+    .note-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--space-3);
+    }
+
+    .note-author {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+    }
+
+    .author-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-full);
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+        color: var(--color-text-inverse);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: var(--font-weight-semibold);
+        font-size: var(--font-size-xs);
+    }
+
+    .author-name {
+        font-weight: var(--font-weight-medium);
+        color: var(--color-text-primary);
+    }
+
+    .note-date {
+        font-size: var(--font-size-sm);
+        color: var(--color-text-muted);
+    }
+
+    .note-content {
+        white-space: pre-wrap;
+        margin-bottom: 0;
+        color: var(--color-text-secondary);
+        line-height: var(--line-height-relaxed);
+    }
+
+    .loading-state {
+        text-align: center;
+        padding: var(--space-10);
+        background: var(--color-bg-primary);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .loading-state .spinner-border {
+        width: 2rem;
+        height: 2rem;
+        color: var(--color-primary);
+        margin-bottom: var(--space-4);
+    }
+
+    .loading-state p {
+        color: var(--color-text-muted);
+        margin-bottom: 0;
+    }
+
+    @@media (max-width: 768px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .page-header {
+            flex-direction: column;
+        }
+
+        .header-actions {
+            width: 100%;
+        }
+
+        .header-actions .btn {
+            flex: 1;
+        }
+    }
+</style>
 
 @code {
     [Parameter]
@@ -346,5 +603,14 @@ else if (_incident is not null)
     private void NavigateToList()
     {
         Navigation.NavigateTo("/incidents");
+    }
+
+    private static string GetInitials(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2)
+            return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+        return name.Length >= 2 ? name[..2].ToUpper() : name.ToUpper();
     }
 }

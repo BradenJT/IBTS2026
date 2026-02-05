@@ -7,74 +7,302 @@
 
 <PageTitle>Users</PageTitle>
 
-<h1>Users</h1>
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1>Users</h1>
+            <p class="page-subtitle">Manage system users and their roles</p>
+        </div>
+        <button class="btn btn-primary" @onclick="NavigateToCreate">
+            <span class="btn-icon">+</span>
+            Create User
+        </button>
+    </div>
 
-<div class="mb-3">
-    <button class="btn btn-primary" @onclick="NavigateToCreate">
-        Create New User
-    </button>
-</div>
+    <div class="search-bar">
+        <div class="search-input-wrapper">
+            <span class="search-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+            </span>
+            <input type="text" class="form-control search-input" placeholder="Search users by name or email..."
+                   @bind="searchTerm" @bind:event="oninput" @onkeyup="OnSearchKeyUp" />
+        </div>
+    </div>
 
-<div class="mb-3">
-    <input type="text" class="form-control" placeholder="Search users..."
-           @bind="searchTerm" @bind:event="oninput" @onkeyup="OnSearchKeyUp" />
-</div>
+    @if (isLoading)
+    {
+        <div class="loading-state">
+            <div class="spinner-border"></div>
+            <p>Loading users...</p>
+        </div>
+    }
+    else if (errorMessage is not null)
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+    else if (users is not null && users.Items.Count > 0)
+    {
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in users.Items)
+                    {
+                        <tr>
+                            <td>
+                                <div class="user-cell">
+                                    <div class="user-avatar">@GetInitials(user)</div>
+                                    <div class="user-info">
+                                        <span class="user-name">@user.FirstName @user.LastName</span>
+                                        <span class="user-email">@user.Email</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="role-badge @GetRoleBadgeClass(user.Role)">@user.Role</span>
+                            </td>
+                            <td class="actions-cell">
+                                <button class="btn btn-sm btn-outline-primary" @onclick="() => NavigateToEdit(user.UserId)">
+                                    Edit
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteUser(user.UserId)">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
 
-@if (isLoading)
-{
-    <p><em>Loading...</em></p>
-}
-else if (errorMessage is not null)
-{
-    <div class="alert alert-danger">@errorMessage</div>
-}
-else if (users is not null)
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Email</th>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Role</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var user in users.Items)
+        <div class="pagination-container">
+            <div class="pagination-info">
+                Showing @GetShowingRange() of @users.TotalCount users
+            </div>
+            <nav>
+                <ul class="pagination">
+                    <li class="page-item @(users.HasPreviousPage ? "" : "disabled")">
+                        <button class="page-link" @onclick="PreviousPage" disabled="@(!users.HasPreviousPage)">
+                            Previous
+                        </button>
+                    </li>
+                    <li class="page-item active">
+                        <span class="page-link">@users.PageNumber</span>
+                    </li>
+                    <li class="page-item @(users.HasNextPage ? "" : "disabled")">
+                        <button class="page-link" @onclick="NextPage" disabled="@(!users.HasNextPage)">
+                            Next
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </div>
+            <h3>No users found</h3>
+            <p>@(string.IsNullOrEmpty(searchTerm) ? "Get started by creating a new user." : "Try adjusting your search terms.")</p>
+            @if (string.IsNullOrEmpty(searchTerm))
             {
-                <tr>
-                    <td>@user.Email</td>
-                    <td>@user.FirstName</td>
-                    <td>@user.LastName</td>
-                    <td>@user.Role</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary" @onclick="() => NavigateToEdit(user.UserId)">
-                            Edit
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteUser(user.UserId)">
-                            Delete
-                        </button>
-                    </td>
-                </tr>
+                <button class="btn btn-primary" @onclick="NavigateToCreate">Create User</button>
             }
-        </tbody>
-    </table>
+        </div>
+    }
+</div>
 
-    <nav>
-        <ul class="pagination">
-            <li class="page-item @(users.HasPreviousPage ? "" : "disabled")">
-                <button class="page-link" @onclick="PreviousPage" disabled="@(!users.HasPreviousPage)">Previous</button>
-            </li>
-            <li class="page-item disabled">
-                <span class="page-link">Page @users.PageNumber of @users.TotalPages (@users.TotalCount total)</span>
-            </li>
-            <li class="page-item @(users.HasNextPage ? "" : "disabled")">
-                <button class="page-link" @onclick="NextPage" disabled="@(!users.HasNextPage)">Next</button>
-            </li>
-        </ul>
-    </nav>
-}
+<style>
+    .page-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: var(--space-5);
+    }
+
+    .page-header h1 {
+        margin-bottom: var(--space-1);
+    }
+
+    .page-subtitle {
+        color: var(--color-text-muted);
+        margin-bottom: 0;
+        font-size: var(--font-size-sm);
+    }
+
+    .btn-icon {
+        margin-right: var(--space-2);
+        font-weight: var(--font-weight-bold);
+    }
+
+    .search-bar {
+        margin-bottom: var(--space-5);
+    }
+
+    .search-input-wrapper {
+        position: relative;
+        max-width: 400px;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: var(--space-3);
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--color-text-light);
+    }
+
+    .search-input {
+        padding-left: 2.5rem;
+    }
+
+    .table-container {
+        background: var(--color-bg-primary);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+
+    .user-cell {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-full);
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+        color: var(--color-text-inverse);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: var(--font-weight-semibold);
+        font-size: var(--font-size-sm);
+    }
+
+    .user-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .user-name {
+        font-weight: var(--font-weight-medium);
+        color: var(--color-text-primary);
+    }
+
+    .user-email {
+        font-size: var(--font-size-sm);
+        color: var(--color-text-muted);
+    }
+
+    .role-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: var(--space-1) var(--space-3);
+        border-radius: var(--radius-full);
+        font-size: var(--font-size-xs);
+        font-weight: var(--font-weight-semibold);
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .role-badge.admin {
+        background-color: rgba(94, 129, 172, 0.15);
+        color: var(--color-primary);
+    }
+
+    .role-badge.user {
+        background-color: var(--color-success-bg);
+        color: var(--color-success-text);
+    }
+
+    .actions-cell {
+        text-align: right;
+    }
+
+    .actions-cell .btn {
+        margin-left: var(--space-2);
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: var(--space-5);
+    }
+
+    .pagination-info {
+        color: var(--color-text-muted);
+        font-size: var(--font-size-sm);
+    }
+
+    .loading-state {
+        text-align: center;
+        padding: var(--space-10);
+    }
+
+    .loading-state .spinner-border {
+        width: 2rem;
+        height: 2rem;
+        color: var(--color-primary);
+        margin-bottom: var(--space-4);
+    }
+
+    .loading-state p {
+        color: var(--color-text-muted);
+        margin-bottom: 0;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: var(--space-10);
+        background: var(--color-bg-primary);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .empty-state-icon {
+        color: var(--color-text-light);
+        margin-bottom: var(--space-4);
+    }
+
+    .empty-state h3 {
+        margin-bottom: var(--space-2);
+        color: var(--color-text-primary);
+    }
+
+    .empty-state p {
+        color: var(--color-text-muted);
+        margin-bottom: var(--space-5);
+    }
+</style>
 
 @code {
     private PagedResultModel<UserModel>? users;
@@ -175,6 +403,30 @@ else if (users is not null)
         {
             errorMessage = $"Error deleting user: {ex.Message}";
         }
+    }
+
+    private static string GetInitials(UserModel user)
+    {
+        var first = !string.IsNullOrEmpty(user.FirstName) ? user.FirstName[0].ToString().ToUpper() : "";
+        var last = !string.IsNullOrEmpty(user.LastName) ? user.LastName[0].ToString().ToUpper() : "";
+        return first + last;
+    }
+
+    private static string GetRoleBadgeClass(string role)
+    {
+        return role.ToLower() switch
+        {
+            "admin" => "admin",
+            _ => "user"
+        };
+    }
+
+    private string GetShowingRange()
+    {
+        if (users == null) return "0";
+        var start = (users.PageNumber - 1) * PageSize + 1;
+        var end = Math.Min(users.PageNumber * PageSize, users.TotalCount);
+        return $"{start}-{end}";
     }
 
     public void Dispose()
