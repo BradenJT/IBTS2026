@@ -1,7 +1,7 @@
 # IBTS2026 - Incident Tracking System
 
 A modern incident management system built with .NET Aspire, Blazor Server, and Entity Framework Core.
-Side project to show proof of knowledge and understanding! Take a look and give feedback! Thanks!
+Side project to show proof of understanding! Take a look and give feedback! Thanks!
 
 ## Architecture
 
