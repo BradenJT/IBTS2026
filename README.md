@@ -81,6 +81,24 @@ Key settings in `appsettings.json`:
 - `PUT /api/incidents/{id}` - Update incident
 - `GET /api/users` - List users
 
+## Screenshots
+
+### Login Page
+<img width="2552" height="1263" alt="image" src="https://github.com/user-attachments/assets/184d8cfb-1f77-489e-ab4a-93d598392975" />
+
+### Users Page
+<img width="2552" height="1158" alt="image" src="https://github.com/user-attachments/assets/39f45077-f0a1-42e9-920c-f320ff2291d6" />
+
+### Incidents Page
+<img width="2551" height="1209" alt="image" src="https://github.com/user-attachments/assets/9df6449b-d73a-43d9-a067-4f55f4ec3e18" />
+
+### Incident Detail
+<img width="1053" height="983" alt="image" src="https://github.com/user-attachments/assets/4dddff5f-8fc3-44dc-bccf-c1fb9f77b50d" />
+
+### Invitations (Invite Users to App)
+<img width="1242" height="321" alt="image" src="https://github.com/user-attachments/assets/a7505c4b-00be-4ffa-be48-abbd936474dc" />
+
+
 ## License
 
 Proprietary
