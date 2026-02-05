@@ -11,6 +11,7 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
 {
     private readonly ProtectedLocalStorage _localStorage;
     private readonly IAuthApiClient _authApiClient;
+    private readonly IAuthTokenStore _tokenStore;
     private readonly ILogger<CustomAuthStateProvider> _logger;
     private AuthenticationState _currentState;
     private const string UserStorageKey = "ibts_user";
@@ -20,10 +21,12 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
     public CustomAuthStateProvider(
         ProtectedLocalStorage localStorage,
         IAuthApiClient authApiClient,
+        IAuthTokenStore tokenStore,
         ILogger<CustomAuthStateProvider> logger)
     {
         _localStorage = localStorage;
         _authApiClient = authApiClient;
+        _tokenStore = tokenStore;
         _logger = logger;
         _currentState = new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
     }
@@ -45,6 +48,19 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
                         await LogoutAsync();
                         return _currentState;
                     }
+                }
+
+                // Restore the JWT token to the circuit cache
+                // This is critical after browser close/reopen when the circuit cache is empty
+                // but the token still exists in ProtectedLocalStorage
+                try
+                {
+                    await _tokenStore.GetTokenAsync();
+                    _logger.LogDebug("JWT token restored to circuit cache for user {UserId}", result.Value.UserId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to restore JWT token to circuit cache (may be during prerendering)");
                 }
 
                 var claims = CreateClaims(result.Value);
