@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet restore:*)",
+      "WebFetch(domain:aspire.dev)",
+      "Bash(dir:*)",
+      "Bash(dotnet build:*)",
+      "WebSearch",
+      "Bash(dotnet ef migrations add:*)",
+      "Bash(dotnet test:*)",
+      "Bash(find:*)",
+      "Bash(dotnet add package:*)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "MCPControl"
+  ],
+  "enableAllProjectMcpServers": true
+}
